@@ -49,6 +49,45 @@ https://github.com/user-attachments/assets/ccb3b5fd-e89a-4073-acee-4975ad48b112
 
 ---
 
+# 项目结构特点
+
+##  架构模式
+- **单模块项目**：所有代码在 `:app` 模块内  
+- **分层架构**：`data → domain → ui` 三层分离  
+- **MVVM 模式**：`ViewModel + StateFlow` 管理状态  
+
+---
+
+## 包结构
+- **原有业务代码**：`com.example.dilidiliactivity.*`  
+- **新增核心代码**：`com.example.dilidili.core.*`  
+- **分层清晰**：数据层、领域层、表现层分离  
+
+---
+
+## 功能模块
+- **首页功能**：`homePage/` 包含多个子功能  
+- **视频播放**：`VideoPlayerPage/` 完整的播放功能  
+- **导航系统**：`navigation/` 统一的路由管理  
+- **通用组件**：`common/` 可复用的 UI 组件  
+
+---
+
+##  技术栈
+- **UI 框架**：Jetpack Compose  
+- **依赖注入**：Hilt  
+- **数据库**：Room  
+- **网络**：Retrofit + OkHttp  
+- **视频播放**：Media3 ExoPlayer  
+- **图片加载**：Coil  
+
+---
+
+## 总结
+该目录结构展示了一个典型的 **Android 单模块项目**，采用了 **现代 Android 开发的最佳实践**，代码组织清晰，便于维护和扩展。
+
+---
+
 ## 学习目标总结
 - 熟悉 **现代 Compose 架构**  
 - 掌握 **依赖与插件的集中管理**  
