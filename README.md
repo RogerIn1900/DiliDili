@@ -84,7 +84,7 @@ https://github.com/user-attachments/assets/ccb3b5fd-e89a-4073-acee-4975ad48b112
 ---
 
 ## 总结
-本目录结构展示了一个典型的 **Android 单模块项目**，采用了 **现代 Android 开发的最佳实践**，代码组织清晰，便于维护和扩展。
+本目录结构展示了一个 **Android 单模块项目**，采用了 **现代 Android 开发的最佳实践**，代码组织清晰，便于维护和扩展。
 
 ---
 
