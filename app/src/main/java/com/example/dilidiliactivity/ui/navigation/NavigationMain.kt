@@ -13,6 +13,7 @@ import com.example.dilidiliactivity.data.local.archive.AppDatabase
 import com.example.dilidiliactivity.domain.repository.VideoRepository
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.SharedVideoViewModel
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoPlayerScreen
+import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoPlayerScreen2
 import com.example.dilidiliactivity.ui.Pages.minePage.FullScreenPage
 import com.example.dilidiliactivity.ui.navigation.TrunckFrame.MainFrame
 import com.google.accompanist.navigation.animation.AnimatedNavHost
@@ -74,6 +75,33 @@ fun RootNavHost(navHostController: NavHostController,
 
             // 调用 VideoPlayerScreen
             VideoPlayerScreen(
+                rootNavController = rootNavController,
+                videoId = videoId,
+                repository = repository,
+                onBack = {
+                    rootNavController.popBackStack()
+                },
+                onExpand = {
+                    rootNavController.navigate(TrunckScreen.FullScreenPage.route)
+                }
+            )
+        }
+
+        composable(
+            "playerLocal/{videoId}",
+            enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
+            exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) },
+            popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
+            popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) }
+        ) { backStackEntry ->
+            val videoId = backStackEntry.arguments?.getString("videoId") ?: ""
+
+            // 获取 Context 和 Repository
+            val context = LocalContext.current
+            val repository = VideoRepository(AppDatabase.getInstance(context).archiveDao())
+
+            // 调用 VideoPlayerScreen
+            VideoPlayerScreen2(
                 rootNavController = rootNavController,
                 videoId = videoId,
                 repository = repository,

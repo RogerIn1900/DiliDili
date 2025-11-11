@@ -1,18 +1,26 @@
 package com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage
 
 import android.R
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
+import android.media.AudioManager
+import android.provider.Settings
 import android.view.View
 import android.widget.FrameLayout
+import androidx.compose.animation.AnimatedVisibility
 import androidx.annotation.OptIn
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,6 +34,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -40,6 +49,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ThumbUp
@@ -67,20 +78,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -110,11 +126,15 @@ import com.example.dilidiliactivity.ui.common.animatePart.Like
 import com.example.dilidiliactivity.ui.common.animatePart.Share
 import com.example.dilidiliactivity.ui.common.animatePart.Star
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -520,6 +540,139 @@ fun FollowButton() {
             Text("关注", fontSize = 14.sp)
         }
     }
+}
+
+private enum class PlayerGestureMode {
+    Brightness,
+    Volume,
+    Seek
+}
+
+private const val SEEK_SENSITIVITY_MS = 60_000f
+private const val THREE_X_SPEED = 3f
+private const val MIN_BRIGHTNESS = 0.05f
+
+@Composable
+private fun BrightnessOverlay(currentBrightness: Float) {
+    val progress = ((currentBrightness - MIN_BRIGHTNESS) / (1f - MIN_BRIGHTNESS)).coerceIn(0f, 1f)
+    PlayerOverlayCard {
+        Icon(
+            imageVector = Icons.Default.Star,
+            contentDescription = "Brightness",
+            tint = Color.White,
+            modifier = Modifier.size(32.dp)
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        OverlayProgressBar(progress)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "${(progress * 100).roundToInt()}%",
+            color = Color.White,
+            fontSize = 14.sp
+        )
+    }
+}
+
+@Composable
+private fun VolumeOverlay(currentVolume: Int, maxVolume: Int) {
+    val progress = if (maxVolume <= 0) 0f else currentVolume.toFloat() / maxVolume
+    PlayerOverlayCard {
+        Icon(
+            imageVector = Icons.Default.Phone,
+            contentDescription = "Volume",
+            tint = Color.White,
+            modifier = Modifier.size(32.dp)
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        OverlayProgressBar(progress.coerceIn(0f, 1f))
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "${(progress * 100).roundToInt()}%",
+            color = Color.White,
+            fontSize = 14.sp
+        )
+    }
+}
+
+@Composable
+private fun SpeedOverlay() {
+    PlayerOverlayCard {
+        Icon(
+            imageVector = Icons.Default.PlayArrow,
+            contentDescription = "Speed Boost",
+            tint = Color.White,
+            modifier = Modifier.size(36.dp)
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "3x",
+            color = Color.White,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+private fun PlayerOverlayCard(content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        modifier = Modifier
+            .widthIn(min = 140.dp)
+            .background(Color(0xAA000000), RoundedCornerShape(16.dp))
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        content = content
+    )
+}
+
+@Composable
+private fun OverlayProgressBar(progress: Float) {
+    Box(
+        modifier = Modifier
+            .width(160.dp)
+            .height(8.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(Color.White.copy(alpha = 0.25f))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .fillMaxWidth(progress)
+                .background(Color.White)
+        )
+    }
+}
+
+private fun Context.findActivity(): Activity? {
+    var current: Context? = this
+    while (current is ContextWrapper) {
+        if (current is Activity) return current
+        current = current.baseContext
+    }
+    return current as? Activity
+}
+
+private fun getInitialBrightness(activity: Activity?): Float {
+    activity ?: return 0.5f
+    val layoutParams = activity.window.attributes
+    val current = layoutParams.screenBrightness
+    if (current in 0f..1f) {
+        return current
+    }
+    return runCatching {
+        val systemValue = Settings.System.getInt(
+            activity.contentResolver,
+            Settings.System.SCREEN_BRIGHTNESS
+        )
+        systemValue / 255f
+    }.getOrDefault(0.5f)
+}
+
+private fun setActivityBrightness(activity: Activity?, value: Float) {
+    activity ?: return
+    val params = activity.window.attributes
+    params.screenBrightness = value.coerceIn(MIN_BRIGHTNESS, 1f)
+    activity.window.attributes = params
 }
 
 
@@ -994,7 +1147,60 @@ fun VideoPlayerWithCustomTopBar(
     onBack: () -> Unit,
     onExpand: () -> Unit
 ) {
+    val context = LocalContext.current
+    val density = LocalDensity.current
+    val activity = remember { context.findActivity() }
+    val audioManager = remember {
+        context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+    }
+    val maxVolume = remember(audioManager) {
+        audioManager?.getStreamMaxVolume(AudioManager.STREAM_MUSIC)?.coerceAtLeast(1) ?: 1
+    }
+    var currentVolume by remember {
+        mutableIntStateOf(audioManager?.getStreamVolume(AudioManager.STREAM_MUSIC) ?: 0)
+    }
+    var currentBrightness by remember { mutableStateOf(getInitialBrightness(activity)) }
     var showTopBar by remember { mutableStateOf(true) }
+    var isSpeedBoosted by remember { mutableStateOf(false) }
+    var normalPlaybackParameters by remember { mutableStateOf(exoPlayer.playbackParameters) }
+    var containerSize by remember { mutableStateOf(IntSize.Zero) }
+    var dragMode by remember { mutableStateOf<PlayerGestureMode?>(null) }
+    var accumulatedDx by remember { mutableStateOf(0f) }
+    var accumulatedDy by remember { mutableStateOf(0f) }
+    var initialSeekPosition by remember { mutableStateOf(0L) }
+    val gestureThresholdPx = remember(density) { with(density) { 16.dp.toPx() } }
+    val overlayScope = rememberCoroutineScope()
+    var showBrightnessOverlay by remember { mutableStateOf(false) }
+    var showVolumeOverlay by remember { mutableStateOf(false) }
+    var showSpeedOverlay by remember { mutableStateOf(false) }
+    var brightnessOverlayJob by remember { mutableStateOf<Job?>(null) }
+    var volumeOverlayJob by remember { mutableStateOf<Job?>(null) }
+
+    fun applyBrightness(target: Float) {
+        val clamped = target.coerceIn(MIN_BRIGHTNESS, 1f)
+        currentBrightness = clamped
+        setActivityBrightness(activity, clamped)
+        showBrightnessOverlay = true
+        brightnessOverlayJob?.cancel()
+        brightnessOverlayJob = overlayScope.launch {
+            delay(1200)
+            showBrightnessOverlay = false
+        }
+    }
+
+    fun applyVolume(target: Int) {
+        audioManager?.let { manager ->
+            val clamped = target.coerceIn(0, maxVolume)
+            manager.setStreamVolume(AudioManager.STREAM_MUSIC, clamped, 0)
+            currentVolume = clamped
+            showVolumeOverlay = true
+            volumeOverlayJob?.cancel()
+            volumeOverlayJob = overlayScope.launch {
+                delay(1200)
+                showVolumeOverlay = false
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -1021,6 +1227,114 @@ fun VideoPlayerWithCustomTopBar(
             modifier = Modifier.fillMaxSize()
         )
 
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .onSizeChanged { containerSize = it }
+                .pointerInput(exoPlayer) {
+                    detectTapGestures(
+                        onDoubleTap = {
+                            if (exoPlayer.isPlaying) {
+                                exoPlayer.pause()
+                            } else {
+                                exoPlayer.play()
+                            }
+                        },
+                        onLongPress = {
+                            if (!isSpeedBoosted) {
+                                normalPlaybackParameters = exoPlayer.playbackParameters
+                                exoPlayer.playbackParameters =
+                                    PlaybackParameters(THREE_X_SPEED, normalPlaybackParameters.pitch)
+                                isSpeedBoosted = true
+                            }
+                            showSpeedOverlay = true
+                        },
+                        onPress = {
+                            try {
+                                tryAwaitRelease()
+                            } finally {
+                                if (isSpeedBoosted) {
+                                    exoPlayer.playbackParameters = normalPlaybackParameters
+                                    isSpeedBoosted = false
+                                }
+                                showSpeedOverlay = false
+                            }
+                        }
+                    )
+                }
+                .pointerInput(containerSize) {
+                    if (containerSize == IntSize.Zero) return@pointerInput
+                    detectDragGestures(
+                        onDragStart = {
+                            dragMode = null
+                            accumulatedDx = 0f
+                            accumulatedDy = 0f
+                            initialSeekPosition = exoPlayer.currentPosition
+                        },
+                        onDrag = { change, dragAmount ->
+                            accumulatedDx += dragAmount.x
+                            accumulatedDy += dragAmount.y
+
+                            if (dragMode == null) {
+                                val absDx = abs(accumulatedDx)
+                                val absDy = abs(accumulatedDy)
+                                if (absDx > gestureThresholdPx || absDy > gestureThresholdPx) {
+                                    dragMode = if (absDx > absDy) {
+                                        PlayerGestureMode.Seek
+                                    } else {
+                                        if (change.position.x < containerSize.width / 2f) {
+                                            PlayerGestureMode.Brightness
+                                        } else {
+                                            PlayerGestureMode.Volume
+                                        }
+                                    }
+                                }
+                            }
+
+                            when (dragMode) {
+                                PlayerGestureMode.Seek -> {
+                                    val duration = exoPlayer.duration.takeIf { it > 0 } ?: Long.MAX_VALUE
+                                    val deltaMs = (accumulatedDx / containerSize.width) * SEEK_SENSITIVITY_MS
+                                    val target = (initialSeekPosition + deltaMs).coerceIn(
+                                        0f,
+                                        if (duration == Long.MAX_VALUE) Float.MAX_VALUE else duration.toFloat()
+                                    ).toLong()
+                                    exoPlayer.seekTo(target)
+                                }
+
+                                PlayerGestureMode.Brightness -> {
+                                    if (containerSize.height > 0) {
+                                        val delta = -dragAmount.y / containerSize.height
+                                        applyBrightness(currentBrightness + delta)
+                                    }
+                                }
+
+                                PlayerGestureMode.Volume -> {
+                                    if (containerSize.height > 0) {
+                                        val step = (-dragAmount.y / containerSize.height) * maxVolume
+                                        applyVolume(currentVolume + step.roundToInt())
+                                    }
+                                }
+
+                                null -> Unit
+                            }
+
+                            change.consume()
+                        },
+                        onDragEnd = {
+                            dragMode = null
+                            accumulatedDx = 0f
+                            accumulatedDy = 0f
+                        },
+                        onDragCancel = {
+                            dragMode = null
+                            accumulatedDx = 0f
+                            accumulatedDy = 0f
+                        }
+                    )
+                }
+        )
+
         if (showTopBar) {
             Row(
                 modifier = Modifier
@@ -1045,6 +1359,27 @@ fun VideoPlayerWithCustomTopBar(
                     )
                 }
             }
+        }
+
+        AnimatedVisibility(
+            visible = showBrightnessOverlay,
+            modifier = Modifier.align(Alignment.Center)
+        ) {
+            BrightnessOverlay(currentBrightness)
+        }
+
+        AnimatedVisibility(
+            visible = showVolumeOverlay,
+            modifier = Modifier.align(Alignment.Center)
+        ) {
+            VolumeOverlay(currentVolume, maxVolume)
+        }
+
+        AnimatedVisibility(
+            visible = showSpeedOverlay,
+            modifier = Modifier.align(Alignment.Center)
+        ) {
+            SpeedOverlay()
         }
     }
 }

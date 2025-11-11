@@ -55,6 +55,9 @@ import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.SharedVide
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VerticalPagerExample
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoIntro
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoViewModel
+import com.example.dilidiliactivity.ui.Pages.homePage.YingShiPage.YingShiPage
+import com.example.dilidiliactivity.ui.Pages.homePage.YingShiPage.YingShiPage2
+import com.example.dilidiliactivity.ui.Pages.homePage.ZuixinPage.ZuixinPage
 import com.example.dilidiliactivity.ui.common.TopBars.HomeTopBar
 import com.example.dilidiliactivity.ui.common.animatePart.Like
 import kotlinx.coroutines.launch
@@ -274,10 +277,12 @@ fun CollapsingHeaderScreen(paddingValues: PaddingValues, sharedVm: SharedVideoVi
 //                        AnimatePage(navController = rootNavController)
                     }
                     HomeTopBarTabs.Zuixin.page -> {
-                        showInfo(HomeTopBarTabs.Zuixin.destination)
+//                        showInfo(HomeTopBarTabs.Zuixin.destination)
+                        ZuixinPage()
                     }
                     HomeTopBarTabs.Yingshi.page -> {
-                        showInfo(HomeTopBarTabs.Yingshi.destination)
+                        YingShiPage(Modifier)
+//                        showInfo(HomeTopBarTabs.Yingshi.destination)
                     }
                     HomeTopBarTabs.Xinzhengcheng.page -> {
                         showInfo(HomeTopBarTabs.Xinzhengcheng.destination)
