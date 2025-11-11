@@ -30,10 +30,18 @@ class AnimateVideoViewModel(
 
     private val _uiState = MutableStateFlow<VideoUiState>(VideoUiState.Loading)
     val uiState: StateFlow<VideoUiState> = _uiState
+    
+    // 累积的列表，保留所有已加载的视频
+    private val _allArchives = MutableStateFlow<List<Archive>>(emptyList())
+    val allArchives: StateFlow<List<Archive>> = _allArchives
+    
+    // 刷新状态
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing
 
     fun loadVideos(ps: Int = 10, rid: Int = 1) {
         viewModelScope.launch {
-//            _uiState.value = VideoUiState.Loading
+            _uiState.value = VideoUiState.Loading
             try {
                 // 限定 9 秒超时
                 val archives = withTimeout(9000L) {
@@ -41,9 +49,33 @@ class AnimateVideoViewModel(
                     //将随机视频接口换成每周必看视频接口
 //                    repo.getPopularPrecious()
                 }
-                _uiState.value = VideoUiState.Success(archives)
+                // 初始加载时，直接设置列表
+                _allArchives.value = archives
+                _uiState.value = VideoUiState.Success(_allArchives.value)
             } catch (e: Exception) {
                 _uiState.value = VideoUiState.Error("加载失败: ${e.message}")
+            }
+        }
+    }
+    
+    // 刷新方法：将新数据添加到列表顶部
+    fun refreshVideos(ps: Int = 10, rid: Int = 1) {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            try {
+                // 限定 9 秒超时
+                val newArchives = withTimeout(9000L) {
+                    repo.getVideoList(ps, rid)
+                }
+                // 将新数据添加到现有列表的顶部，并去重（基于 bvid）
+                val existingBvids = _allArchives.value.map { it.bvid }.toSet()
+                val uniqueNewArchives = newArchives.filter { it.bvid !in existingBvids }
+                _allArchives.value = uniqueNewArchives + _allArchives.value
+                _uiState.value = VideoUiState.Success(_allArchives.value)
+            } catch (e: Exception) {
+                _uiState.value = VideoUiState.Error("刷新失败: ${e.message}")
+            } finally {
+                _isRefreshing.value = false
             }
         }
     }
