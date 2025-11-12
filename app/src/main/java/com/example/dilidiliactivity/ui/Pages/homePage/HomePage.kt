@@ -56,7 +56,6 @@ import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VerticalPa
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoIntro
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoViewModel
 import com.example.dilidiliactivity.ui.Pages.homePage.YingShiPage.YingShiPage
-import com.example.dilidiliactivity.ui.Pages.homePage.YingShiPage.YingShiPage2
 import com.example.dilidiliactivity.ui.Pages.homePage.ZuixinPage.ZuixinPage
 import com.example.dilidiliactivity.ui.common.TopBars.HomeTopBar
 import com.example.dilidiliactivity.ui.common.animatePart.Like

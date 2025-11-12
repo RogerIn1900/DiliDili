@@ -40,7 +40,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -206,11 +205,11 @@ fun VideoPlayerScreen2(
                             text = "请选择要播放的视频文件",
                             color = Color.White
                         )
-                    } else if (!isFullScreen) {
+                    } else {
                         VideoPlayerWithCustomTopBar(
                             exoPlayer = exoPlayer,
                             onBack = onBack,
-                            onExpand = { isFullScreen = true },
+                            onExpand = onExpand,
                             modifier = Modifier.fillMaxSize()
                         )
                     }
@@ -363,83 +362,6 @@ fun VideoPlayerScreen2(
             }
         }
     }
-
-    if (isFullScreen && selectedVideoUri != null) {
-        FullscreenVideoDialog(
-            exoPlayer = exoPlayer,
-            onDismiss = { isFullScreen = false }
-        )
-    }
-}
-
-@Composable
-private fun FullscreenVideoDialog(
-    exoPlayer: ExoPlayer,
-    onDismiss: () -> Unit
-) {
-    val view = LocalView.current
-    val context = LocalContext.current
-    val activity = remember { context.findActivity() }
-    
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        // 设置对话框窗口为真正的全屏
-        DisposableEffect(Unit) {
-            val window = view.context.findActivity()?.window
-            var originalSystemUiVisibility = 0
-            
-            window?.let {
-                originalSystemUiVisibility = it.decorView.systemUiVisibility
-                // 隐藏系统栏，实现真正的全屏
-                it.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-                it.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
-                it.decorView.systemUiVisibility = (
-                    android.view.View.SYSTEM_UI_FLAG_FULLSCREEN
-                    or android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    or android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    or android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    or android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                )
-            }
-            
-            onDispose {
-                // 恢复原始窗口属性
-                window?.let {
-                    it.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-                    it.clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
-                    it.decorView.systemUiVisibility = originalSystemUiVisibility
-                }
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black)
-        ) {
-            VideoPlayerWithCustomTopBar(
-                exoPlayer = exoPlayer,
-                onBack = onDismiss,
-                onExpand = onDismiss,
-                style = PlayerControlStyle.YingShi,
-                onHome = {},
-                isFullScreen = true,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-    }
-}
-
-private fun Context.findActivity(): Activity? {
-    var current: Context? = this
-    while (current is ContextWrapper) {
-        if (current is Activity) return current
-        current = current.baseContext
-    }
-    return current as? Activity
 }
 
 @Composable

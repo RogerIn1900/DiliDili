@@ -1,11 +1,7 @@
 package com.example.dilidiliactivity.ui.Pages.homePage.YingShiPage
 
-import android.app.Activity
 import android.content.ContentResolver
-import android.content.Context
-import android.content.ContextWrapper
 import android.content.Intent
-import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -41,7 +37,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,8 +48,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
-import androidx.media3.common.VideoSize
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultHttpDataSource
@@ -78,7 +71,6 @@ private const val TAG = "YingShiPage"
 fun YingShiPage(modifier: Modifier = Modifier) {
 
 	val context = LocalContext.current
-	val activity = remember { context.findActivity() }
 	val contentResolver = context.contentResolver
 
 	val rawVideos = remember {
@@ -98,8 +90,7 @@ fun YingShiPage(modifier: Modifier = Modifier) {
 	val tabs = remember { listOf("内置视频", "本地视频") }
 	val pagerState = rememberPagerState(initialPage = 0) { tabs.size }
 	val coroutineScope = rememberCoroutineScope()
-	var isFullScreen by rememberSaveable { mutableStateOf(false) }
-	var videoAspectRatio by remember { mutableStateOf(16f / 9f) }
+	var isFullScreen by remember { mutableStateOf(false) }
 
 	val openDocumentLauncher =
 		rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -145,31 +136,6 @@ fun YingShiPage(modifier: Modifier = Modifier) {
 		}
 	}
 
-	DisposableEffect(exoPlayer) {
-		val listener = object : Player.Listener {
-			override fun onVideoSizeChanged(videoSize: VideoSize) {
-				val width = if (videoSize.unappliedRotationDegrees % 180 == 0) {
-					videoSize.width
-				} else {
-					videoSize.height
-				}
-				val height = if (videoSize.unappliedRotationDegrees % 180 == 0) {
-					videoSize.height
-				} else {
-					videoSize.width
-				}
-				if (height > 0) {
-					val ratio = (width * videoSize.pixelWidthHeightRatio) / height
-					videoAspectRatio = ratio.coerceAtLeast(0.1f)
-				}
-			}
-		}
-		exoPlayer.addListener(listener)
-		onDispose {
-			exoPlayer.removeListener(listener)
-		}
-	}
-
 	LaunchedEffect(selectedVideoUri) {
 		val uri = selectedVideoUri
 		if (uri != null) {
@@ -179,26 +145,6 @@ fun YingShiPage(modifier: Modifier = Modifier) {
 		} else {
 			exoPlayer.stop()
 			exoPlayer.clearMediaItems()
-		}
-	}
-
-	LaunchedEffect(isFullScreen, videoAspectRatio) {
-		val target = when {
-			!isFullScreen -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-			videoAspectRatio > 1.05f -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-			videoAspectRatio < 0.95f -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-			else -> ActivityInfo.SCREEN_ORIENTATION_SENSOR
-		}
-		if (activity != null && activity.requestedOrientation != target) {
-			activity.requestedOrientation = target
-		}
-	}
-
-	DisposableEffect(activity) {
-		onDispose {
-			if (activity != null) {
-				activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-			}
 		}
 	}
 
@@ -363,15 +309,6 @@ private fun FullscreenVideoDialog(
 			)
 		}
 	}
-}
-
-private fun Context.findActivity(): Activity? {
-	var current: Context? = this
-	while (current is ContextWrapper) {
-		if (current is Activity) return current
-		current = current.baseContext
-	}
-	return current as? Activity
 }
 
 

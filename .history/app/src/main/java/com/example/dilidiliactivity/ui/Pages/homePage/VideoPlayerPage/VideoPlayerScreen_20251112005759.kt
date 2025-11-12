@@ -44,17 +44,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Brightness6
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -64,8 +63,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -75,7 +72,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -102,7 +98,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackParameters
-import androidx.media3.common.Player
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -136,7 +131,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.isActive
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
@@ -564,7 +558,7 @@ private fun BrightnessOverlay(currentBrightness: Float) {
     val progress = ((currentBrightness - MIN_BRIGHTNESS) / (1f - MIN_BRIGHTNESS)).coerceIn(0f, 1f)
     PlayerOverlayCard {
         Icon(
-            imageVector = Icons.Default.Star,
+            imageVector = Icons.Default.Brightness6,
             contentDescription = "Brightness",
             tint = Color.White,
             modifier = Modifier.size(32.dp)
@@ -585,7 +579,7 @@ private fun VolumeOverlay(currentVolume: Int, maxVolume: Int) {
     val progress = if (maxVolume <= 0) 0f else currentVolume.toFloat() / maxVolume
     PlayerOverlayCard {
         Icon(
-            imageVector = Icons.Default.Phone,
+            imageVector = Icons.Default.VolumeUp,
             contentDescription = "Volume",
             tint = Color.White,
             modifier = Modifier.size(32.dp)
@@ -605,7 +599,7 @@ private fun VolumeOverlay(currentVolume: Int, maxVolume: Int) {
 private fun SpeedOverlay() {
     PlayerOverlayCard {
         Icon(
-            imageVector = Icons.Default.PlayArrow,
+            imageVector = Icons.Default.FastForward,
             contentDescription = "Speed Boost",
             tint = Color.White,
             modifier = Modifier.size(36.dp)
@@ -1148,23 +1142,11 @@ fun VideoDetailPage(
 }
 
 
-enum class PlayerControlStyle {
-    Default,
-    YingShi
-}
-
-@OptIn(UnstableApi::class)
 @Composable
 fun VideoPlayerWithCustomTopBar(
     exoPlayer: ExoPlayer,
     onBack: () -> Unit,
-    onExpand: () -> Unit,
-    style: PlayerControlStyle = PlayerControlStyle.Default,
-    onHome: (() -> Unit)? = null,
-    isFullScreen: Boolean = false,
-    modifier: Modifier = Modifier
-        .fillMaxWidth()
-        .height(300.dp)
+    onExpand: () -> Unit
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
@@ -1179,7 +1161,7 @@ fun VideoPlayerWithCustomTopBar(
         mutableIntStateOf(audioManager?.getStreamVolume(AudioManager.STREAM_MUSIC) ?: 0)
     }
     var currentBrightness by remember { mutableStateOf(getInitialBrightness(activity)) }
-    var controlsVisible by remember { mutableStateOf(true) }
+    var showTopBar by remember { mutableStateOf(true) }
     var isSpeedBoosted by remember { mutableStateOf(false) }
     var normalPlaybackParameters by remember { mutableStateOf(exoPlayer.playbackParameters) }
     var containerSize by remember { mutableStateOf(IntSize.Zero) }
@@ -1221,97 +1203,37 @@ fun VideoPlayerWithCustomTopBar(
         }
     }
 
-    val useCustomControls = style == PlayerControlStyle.YingShi
-    var isPlaying by remember { mutableStateOf(exoPlayer.isPlaying) }
-    var duration by remember { mutableLongStateOf(exoPlayer.duration.takeIf { it > 0 } ?: 0L) }
-    var currentPosition by remember { mutableLongStateOf(0L) }
-    var bufferedPosition by remember { mutableLongStateOf(0L) }
-    var sliderPosition by remember { mutableLongStateOf(0L) }
-    var isSeeking by remember { mutableStateOf(false) }
-
-    DisposableEffect(exoPlayer, useCustomControls) {
-        if (useCustomControls) {
-            val listener = object : Player.Listener {
-                override fun onIsPlayingChanged(isPlayingState: Boolean) {
-                    isPlaying = isPlayingState
-                }
-
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    duration = exoPlayer.duration.takeIf { it > 0 } ?: duration
-                    bufferedPosition = exoPlayer.bufferedPosition
-                }
-
-                override fun onEvents(player: Player, events: Player.Events) {
-                    duration = player.duration.takeIf { it > 0 } ?: duration
-                    bufferedPosition = player.bufferedPosition
-                }
-            }
-            exoPlayer.addListener(listener)
-            onDispose {
-                exoPlayer.removeListener(listener)
-            }
-        } else {
-            onDispose { }
-        }
-    }
-
-    LaunchedEffect(exoPlayer, useCustomControls) {
-        if (useCustomControls) {
-            while (isActive) {
-                currentPosition = exoPlayer.currentPosition
-                bufferedPosition = exoPlayer.bufferedPosition
-                duration = exoPlayer.duration.takeIf { it > 0 } ?: duration
-                if (!isSeeking) {
-                    sliderPosition = currentPosition
-                }
-                delay(500)
-            }
-        }
-    }
-
     Box(
-        modifier = modifier
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(300.dp)
     ) {
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
                     player = exoPlayer
-                    useController = !useCustomControls
+                    useController = true
                     layoutParams = FrameLayout.LayoutParams(
                         FrameLayout.LayoutParams.MATCH_PARENT,
                         FrameLayout.LayoutParams.MATCH_PARENT
                     )
-                    if (!useCustomControls) {
-                        setControllerVisibilityListener(object :
-                            PlayerView.ControllerVisibilityListener {
-                            override fun onVisibilityChanged(visibility: Int) {
-                                controlsVisible = visibility == View.VISIBLE
-                            }
-                        })
-                    }
+                    setControllerVisibilityListener(object :
+                        PlayerView.ControllerVisibilityListener {
+                        override fun onVisibilityChanged(visibility: Int) {
+                            showTopBar = visibility == View.VISIBLE
+                        }
+                    })
                 }
             },
-            update = { playerView ->
-                // 确保 PlayerView 始终绑定到同一个 exoPlayer，保持播放状态
-                if (playerView.player != exoPlayer) {
-                    playerView.player = exoPlayer
-                }
-                if (!useCustomControls) {
-                    if (controlsVisible) {
-                        playerView.showController()
-                    } else {
-                        playerView.hideController()
-                    }
-                }
-            },
+            modifier = Modifier.fillMaxSize()
+        )
+
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .onSizeChanged { containerSize = it }
                 .pointerInput(exoPlayer) {
                     detectTapGestures(
-                        onTap = {
-                            controlsVisible = !controlsVisible
-                        },
                         onDoubleTap = {
                             if (exoPlayer.isPlaying) {
                                 exoPlayer.pause()
@@ -1372,16 +1294,13 @@ fun VideoPlayerWithCustomTopBar(
 
                             when (dragMode) {
                                 PlayerGestureMode.Seek -> {
-                                    val durationTotal = exoPlayer.duration.takeIf { it > 0 } ?: Long.MAX_VALUE
+                                    val duration = exoPlayer.duration.takeIf { it > 0 } ?: Long.MAX_VALUE
                                     val deltaMs = (accumulatedDx / containerSize.width) * SEEK_SENSITIVITY_MS
                                     val target = (initialSeekPosition + deltaMs).coerceIn(
                                         0f,
-                                        if (durationTotal == Long.MAX_VALUE) Float.MAX_VALUE else durationTotal.toFloat()
+                                        if (duration == Long.MAX_VALUE) Float.MAX_VALUE else duration.toFloat()
                                     ).toLong()
                                     exoPlayer.seekTo(target)
-                                    if (useCustomControls && duration > 0) {
-                                        sliderPosition = target.coerceAtMost(duration)
-                                    }
                                 }
 
                                 PlayerGestureMode.Brightness -> {
@@ -1417,7 +1336,7 @@ fun VideoPlayerWithCustomTopBar(
                 }
         )
 
-        if (style == PlayerControlStyle.Default && controlsVisible) {
+        if (showTopBar) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1437,146 +1356,6 @@ fun VideoPlayerWithCustomTopBar(
                     Icon(
                         Icons.Default.MoreVert,
                         contentDescription = "更多",
-                        tint = Color.White
-                    )
-                }
-            }
-        }
-
-        if (style == PlayerControlStyle.YingShi && controlsVisible) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.TopCenter)
-                    .background(Color(0x55000000))
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "返回",
-                            tint = Color.White
-                        )
-                    }
-                    if (onHome != null) {
-                        IconButton(onClick = onHome) {
-                            Icon(
-                                Icons.Default.Home,
-                                contentDescription = "主页",
-                                tint = Color.White
-                            )
-                        }
-                    }
-                }
-                IconButton(onClick = onExpand) {
-                    Icon(
-                        Icons.Default.MoreVert,
-                        contentDescription = "更多",
-                        tint = Color.White
-                    )
-                }
-            }
-
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(end = 12.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(Color(0x55000000))
-                        .clickable { }
-                ) {
-                    Icon(
-                        Icons.Default.Phone,
-                        contentDescription = "音轨",
-                        tint = Color.White,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .background(Color(0x66000000))
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(
-                    onClick = {
-                        if (exoPlayer.isPlaying) {
-                            exoPlayer.pause()
-                        } else {
-                            exoPlayer.play()
-                        }
-                    }
-                ) {
-                    Icon(
-                        if (isPlaying) Icons.Default.Close else Icons.Default.PlayArrow,
-                        contentDescription = if (isPlaying) "暂停" else "播放",
-                        tint = Color.White
-                    )
-                }
-
-                Slider(
-                    value = when {
-                        duration <= 0L -> 0f
-                        duration == 0L -> 0f
-                        else -> (if (duration > 0) sliderPosition.coerceIn(0, duration).toFloat() / duration.toFloat() else 0f)
-                    },
-                    onValueChange = { fraction ->
-                        if (duration > 0) {
-                            val target = (fraction.coerceIn(0f, 1f) * duration).toLong()
-                            sliderPosition = target
-                            isSeeking = true
-                        }
-                    },
-                    onValueChangeFinished = {
-                        if (duration > 0) {
-                            exoPlayer.seekTo(sliderPosition.coerceIn(0, duration))
-                        }
-                        isSeeking = false
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 4.dp),
-                    enabled = duration > 0,
-                    colors = SliderDefaults.colors(
-                        activeTrackColor = Color(0xFFFF6680),
-                        inactiveTrackColor = Color.White.copy(alpha = 0.3f),
-                        thumbColor = Color.White
-                    )
-                )
-
-                Text(
-                    text = "${formatDuration(sliderPosition)} / ${formatDuration(duration)}",
-                    color = Color.White,
-                    fontSize = 12.sp
-                )
-
-                IconButton(
-                    onClick = { /* TODO: 弹幕/小窗 */ }
-                ) {
-                    Icon(
-                        Icons.Default.ArrowDropDown,
-                        contentDescription = "小窗播放",
-                        tint = Color.White
-                    )
-                }
-
-                IconButton(onClick = onExpand) {
-                    Icon(
-                        if (isFullScreen) Icons.Default.Add else Icons.Default.Check,
-                        contentDescription = if (isFullScreen) "退出全屏" else "全屏",
                         tint = Color.White
                     )
                 }
@@ -1626,19 +1405,6 @@ suspend fun getBiliVideoUrl(archive: Archive): String? = withContext(Dispatchers
     } catch (e: Exception) {
         e.printStackTrace()
         null
-    }
-}
-
-private fun formatDuration(positionMs: Long): String {
-    if (positionMs <= 0L) return "00:00"
-    val totalSeconds = positionMs / 1000
-    val hours = totalSeconds / 3600
-    val minutes = (totalSeconds % 3600) / 60
-    val seconds = totalSeconds % 60
-    return if (hours > 0) {
-        String.format("%d:%02d:%02d", hours, minutes, seconds)
-    } else {
-        String.format("%02d:%02d", minutes, seconds)
     }
 }
 

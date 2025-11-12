@@ -377,7 +377,6 @@ private fun FullscreenVideoDialog(
     exoPlayer: ExoPlayer,
     onDismiss: () -> Unit
 ) {
-    val view = LocalView.current
     val context = LocalContext.current
     val activity = remember { context.findActivity() }
     
@@ -387,30 +386,31 @@ private fun FullscreenVideoDialog(
     ) {
         // 设置对话框窗口为真正的全屏
         DisposableEffect(Unit) {
-            val window = view.context.findActivity()?.window
-            var originalSystemUiVisibility = 0
+            val window = activity?.window
+            val originalFlags = window?.attributes?.flags
+            val originalSystemUiVisibility = window?.decorView?.systemUiVisibility
             
             window?.let {
-                originalSystemUiVisibility = it.decorView.systemUiVisibility
-                // 隐藏系统栏，实现真正的全屏
+                // 隐藏系统栏
                 it.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
                 it.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
                 it.decorView.systemUiVisibility = (
                     android.view.View.SYSTEM_UI_FLAG_FULLSCREEN
                     or android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                     or android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    or android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    or android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    or android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                 )
             }
             
             onDispose {
                 // 恢复原始窗口属性
                 window?.let {
-                    it.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
-                    it.clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
-                    it.decorView.systemUiVisibility = originalSystemUiVisibility
+                    originalFlags?.let { flags ->
+                        it.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+                        it.clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
+                    }
+                    originalSystemUiVisibility?.let { visibility ->
+                        it.decorView.systemUiVisibility = visibility
+                    }
                 }
             }
         }

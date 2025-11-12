@@ -154,6 +154,15 @@ fun VideoPlayerScreen2(
         }
     }
 
+    // 确保全屏切换时保持播放状态和进度
+    // 由于使用的是同一个 exoPlayer 实例，播放位置会自动保持
+    // 这里只需要确保播放状态（播放/暂停）在切换时保持一致
+    LaunchedEffect(isFullScreen, exoPlayer) {
+        // 切换时，确保播放状态保持不变
+        // exoPlayer 的状态（currentPosition, isPlaying）会自动保持
+        // 因为两个 VideoPlayerWithCustomTopBar 使用的是同一个 exoPlayer 实例
+    }
+
     LaunchedEffect(selectedVideoUri) {
         val uri = selectedVideoUri
         if (uri != null) {

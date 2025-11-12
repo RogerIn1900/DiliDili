@@ -1160,11 +1160,7 @@ fun VideoPlayerWithCustomTopBar(
     onBack: () -> Unit,
     onExpand: () -> Unit,
     style: PlayerControlStyle = PlayerControlStyle.Default,
-    onHome: (() -> Unit)? = null,
-    isFullScreen: Boolean = false,
-    modifier: Modifier = Modifier
-        .fillMaxWidth()
-        .height(300.dp)
+    onHome: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
@@ -1270,7 +1266,9 @@ fun VideoPlayerWithCustomTopBar(
     }
 
     Box(
-        modifier = modifier
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(300.dp)
     ) {
         AndroidView(
             factory = { ctx ->
@@ -1292,10 +1290,6 @@ fun VideoPlayerWithCustomTopBar(
                 }
             },
             update = { playerView ->
-                // 确保 PlayerView 始终绑定到同一个 exoPlayer，保持播放状态
-                if (playerView.player != exoPlayer) {
-                    playerView.player = exoPlayer
-                }
                 if (!useCustomControls) {
                     if (controlsVisible) {
                         playerView.showController()
@@ -1575,8 +1569,8 @@ fun VideoPlayerWithCustomTopBar(
 
                 IconButton(onClick = onExpand) {
                     Icon(
-                        if (isFullScreen) Icons.Default.Add else Icons.Default.Check,
-                        contentDescription = if (isFullScreen) "退出全屏" else "全屏",
+                        Icons.Default.Add,
+                        contentDescription = "全屏",
                         tint = Color.White
                     )
                 }

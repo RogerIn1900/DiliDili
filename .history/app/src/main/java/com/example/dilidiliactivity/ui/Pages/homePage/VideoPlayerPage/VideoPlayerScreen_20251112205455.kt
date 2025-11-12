@@ -44,18 +44,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.LiveTv
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -1148,23 +1150,18 @@ fun VideoDetailPage(
 }
 
 
+@Composable
 enum class PlayerControlStyle {
     Default,
     YingShi
 }
 
-@OptIn(UnstableApi::class)
-@Composable
 fun VideoPlayerWithCustomTopBar(
     exoPlayer: ExoPlayer,
     onBack: () -> Unit,
     onExpand: () -> Unit,
     style: PlayerControlStyle = PlayerControlStyle.Default,
-    onHome: (() -> Unit)? = null,
-    isFullScreen: Boolean = false,
-    modifier: Modifier = Modifier
-        .fillMaxWidth()
-        .height(300.dp)
+    onHome: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
@@ -1232,8 +1229,8 @@ fun VideoPlayerWithCustomTopBar(
     DisposableEffect(exoPlayer, useCustomControls) {
         if (useCustomControls) {
             val listener = object : Player.Listener {
-                override fun onIsPlayingChanged(isPlayingState: Boolean) {
-                    isPlaying = isPlayingState
+                override fun onIsPlayingChanged(isPlaying: Boolean) {
+                    this@VideoPlayerWithCustomTopBar.isPlaying = isPlaying
                 }
 
                 override fun onPlaybackStateChanged(playbackState: Int) {
@@ -1270,7 +1267,9 @@ fun VideoPlayerWithCustomTopBar(
     }
 
     Box(
-        modifier = modifier
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(300.dp)
     ) {
         AndroidView(
             factory = { ctx ->
@@ -1292,10 +1291,6 @@ fun VideoPlayerWithCustomTopBar(
                 }
             },
             update = { playerView ->
-                // 确保 PlayerView 始终绑定到同一个 exoPlayer，保持播放状态
-                if (playerView.player != exoPlayer) {
-                    playerView.player = exoPlayer
-                }
                 if (!useCustomControls) {
                     if (controlsVisible) {
                         playerView.showController()
@@ -1495,7 +1490,7 @@ fun VideoPlayerWithCustomTopBar(
                         .clickable { }
                 ) {
                     Icon(
-                        Icons.Default.Phone,
+                        Icons.Default.MusicNote,
                         contentDescription = "音轨",
                         tint = Color.White,
                         modifier = Modifier.align(Alignment.Center)
@@ -1521,7 +1516,7 @@ fun VideoPlayerWithCustomTopBar(
                     }
                 ) {
                     Icon(
-                        if (isPlaying) Icons.Default.Close else Icons.Default.PlayArrow,
+                        if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = if (isPlaying) "暂停" else "播放",
                         tint = Color.White
                     )
@@ -1567,7 +1562,7 @@ fun VideoPlayerWithCustomTopBar(
                     onClick = { /* TODO: 弹幕/小窗 */ }
                 ) {
                     Icon(
-                        Icons.Default.ArrowDropDown,
+                        Icons.Default.LiveTv,
                         contentDescription = "小窗播放",
                         tint = Color.White
                     )
@@ -1575,8 +1570,8 @@ fun VideoPlayerWithCustomTopBar(
 
                 IconButton(onClick = onExpand) {
                     Icon(
-                        if (isFullScreen) Icons.Default.Add else Icons.Default.Check,
-                        contentDescription = if (isFullScreen) "退出全屏" else "全屏",
+                        Icons.Default.Fullscreen,
+                        contentDescription = "全屏",
                         tint = Color.White
                     )
                 }
@@ -1626,19 +1621,6 @@ suspend fun getBiliVideoUrl(archive: Archive): String? = withContext(Dispatchers
     } catch (e: Exception) {
         e.printStackTrace()
         null
-    }
-}
-
-private fun formatDuration(positionMs: Long): String {
-    if (positionMs <= 0L) return "00:00"
-    val totalSeconds = positionMs / 1000
-    val hours = totalSeconds / 3600
-    val minutes = (totalSeconds % 3600) / 60
-    val seconds = totalSeconds % 60
-    return if (hours > 0) {
-        String.format("%d:%02d:%02d", hours, minutes, seconds)
-    } else {
-        String.format("%02d:%02d", minutes, seconds)
     }
 }
 

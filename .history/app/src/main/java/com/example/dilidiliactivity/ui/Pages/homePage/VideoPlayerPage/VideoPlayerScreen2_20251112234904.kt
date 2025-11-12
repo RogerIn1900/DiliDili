@@ -148,9 +148,31 @@ fun VideoPlayerScreen2(
         }
     }
 
+    // 保存播放状态，确保全屏切换时保持播放进度
+    var savedPlaybackState by remember { mutableStateOf<Pair<Long, Boolean>?>(null) }
+
     DisposableEffect(exoPlayer) {
         onDispose {
             exoPlayer.release()
+        }
+    }
+
+    // 在全屏切换时保存和恢复播放状态
+    LaunchedEffect(isFullScreen) {
+        if (isFullScreen) {
+            // 进入全屏时，保存当前播放位置和播放状态
+            savedPlaybackState = Pair(exoPlayer.currentPosition, exoPlayer.isPlaying)
+        } else {
+            // 退出全屏时，恢复播放位置和播放状态
+            savedPlaybackState?.let { (position, wasPlaying) ->
+                if (exoPlayer.duration > 0 && position < exoPlayer.duration) {
+                    exoPlayer.seekTo(position)
+                }
+                if (wasPlaying) {
+                    exoPlayer.play()
+                }
+            }
+            savedPlaybackState = null
         }
     }
 

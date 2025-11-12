@@ -1,11 +1,7 @@
 package com.example.dilidiliactivity.ui.Pages.homePage.YingShiPage
 
-import android.app.Activity
 import android.content.ContentResolver
-import android.content.Context
-import android.content.ContextWrapper
 import android.content.Intent
-import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -22,16 +18,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ScrollableTabRow
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -40,8 +30,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,11 +38,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
-import androidx.media3.common.VideoSize
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultHttpDataSource
@@ -65,20 +49,121 @@ import androidx.media3.ui.PlayerView
 import com.example.dilidiliactivity.R
 import com.example.dilidiliactivity.data.remote.ApiClient.ApiClient
 import com.example.dilidiliactivity.ui.Pages.homePage.RandomVideo.RandomVideoViewModel
-import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.PlayerControlStyle
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoPlayerWithCustomTopBar
-import kotlinx.coroutines.launch
 
 
 private const val TAG = "YingShiPage"
 
+// 方式一：获取 progressive 直链（优先 data.durl[0].url）
+@OptIn(UnstableApi::class)
+suspend fun getPlayUrl(cid: String, bvid: String, qn: Int = 80): String? {
+	val TAG = "YingShiPage2"
+	return try {
+		val response = ApiClient.api.getPlayUrl(cid = cid, bvid = bvid, qn = qn)
+		if (!response.isSuccessful) return null
+		val body = response.body() ?: return null
+		Log.d(TAG, "getPlayUrl: ${body.data.durl.firstOrNull()?.url}")
+		body.data.durl.firstOrNull()?.url
+	} catch (_: Exception) {
+		null
+	}
+}
+
+// 方式二：获取 progressive 备选直链（来自 durl[0].backup_url）
+@OptIn(UnstableApi::class)
+suspend fun getBackupPlayUrl(cid: String, bvid: String, qn: Int = 80): String? {
+	val TAG = "YingShiPage2"
+	return try {
+		val response = ApiClient.api.getPlayUrl(cid = cid, bvid = bvid, qn = qn)
+		if (!response.isSuccessful) return null
+		val body = response.body() ?: return null
+		val backup = body.data.durl.firstOrNull()?.backup_url?.firstOrNull()
+		Log.d(TAG, "getBackupPlayUrl: $backup")
+		backup
+	} catch (_: Exception) {
+		null
+	}
+}
+
+// 方式三：按清晰度降级选择可用直链（尝试 120/116/80/64）
+@OptIn(UnstableApi::class)
+suspend fun getBestAvailableProgressiveUrl(cid: String, bvid: String): String? {
+	val preferredQualities = listOf(120, 116, 80, 64)
+	for (quality in preferredQualities) {
+		val primary = getPlayUrl(cid = cid, bvid = bvid, qn = quality)
+		if (!primary.isNullOrEmpty()) return primary
+		val backup = getBackupPlayUrl(cid = cid, bvid = bvid, qn = quality)
+		if (!backup.isNullOrEmpty()) return backup
+	}
+	return null
+}
 
 @OptIn(UnstableApi::class)
+@Composable
+fun YingShiPage2(modifier: Modifier = Modifier) {
+
+	val context = LocalContext.current
+	val viewModel = remember { RandomVideoViewModel() }
+	val exoPlayer = remember { ExoPlayer.Builder(context).build() }
+
+	// 加载随机视频，获取播放链接列表
+	LaunchedEffect(Unit) {
+		viewModel.loadRandomVideos(ps = 7, rid = 1)
+	}
+
+	// 当 uiState 有数据后，调用播放地址接口获取直链，并携带必要请求头播放
+	val uiState = viewModel.uiState
+	LaunchedEffect(uiState) {
+		val archives = uiState?.data?.archives ?: return@LaunchedEffect
+		if (archives.isEmpty()) return@LaunchedEffect
+
+		val first = archives.first()
+		val bvid = first.bvid
+		val cid = first.cid.toString()
+
+		// 依次尝试多种方式获取直链：优选高画质，其次备选源
+		val playUrl = getBackupPlayUrl(cid = cid, bvid = bvid)
+		if (!playUrl.isNullOrEmpty()) {
+			val httpFactory = DefaultHttpDataSource.Factory()
+				.setDefaultRequestProperties(
+					mapOf(
+						// 使用带 bvid 的页面作为引用页，部分 CDN 会校验
+						"Referer" to "https://www.bilibili.com/video/$bvid/",
+						"Origin" to "https://www.bilibili.com",
+						"User-Agent" to "Mozilla/5.0 (Android) ExoPlayer",
+					)
+				)
+
+			val mediaItem = MediaItem.fromUri(playUrl)
+			val mediaSource = ProgressiveMediaSource.Factory(httpFactory)
+				.createMediaSource(mediaItem)
+
+			exoPlayer.setMediaSource(mediaSource)
+			exoPlayer.prepare()
+			exoPlayer.playWhenReady = true
+		}
+	}
+
+	AndroidView(
+		modifier = modifier,
+		factory = {
+			PlayerView(context).apply {
+				player = exoPlayer
+				useController = true
+			}
+		}
+	)
+
+	DisposableEffect(exoPlayer) {
+		onDispose { exoPlayer.release() }
+	}
+}
+
+
 @Composable
 fun YingShiPage(modifier: Modifier = Modifier) {
 
 	val context = LocalContext.current
-	val activity = remember { context.findActivity() }
 	val contentResolver = context.contentResolver
 
 	val rawVideos = remember {
@@ -95,11 +180,6 @@ fun YingShiPage(modifier: Modifier = Modifier) {
 	var selectedVideoLabel by remember { mutableStateOf(rawVideos.firstOrNull()?.label ?: "请选择视频") }
 	var pickerError by remember { mutableStateOf<String?>(null) }
 	val localVideos = remember { mutableStateListOf<LocalVideoItem>() }
-	val tabs = remember { listOf("内置视频", "本地视频") }
-	val pagerState = rememberPagerState(initialPage = 0) { tabs.size }
-	val coroutineScope = rememberCoroutineScope()
-	var isFullScreen by rememberSaveable { mutableStateOf(false) }
-	var videoAspectRatio by remember { mutableStateOf(16f / 9f) }
 
 	val openDocumentLauncher =
 		rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -145,31 +225,6 @@ fun YingShiPage(modifier: Modifier = Modifier) {
 		}
 	}
 
-	DisposableEffect(exoPlayer) {
-		val listener = object : Player.Listener {
-			override fun onVideoSizeChanged(videoSize: VideoSize) {
-				val width = if (videoSize.unappliedRotationDegrees % 180 == 0) {
-					videoSize.width
-				} else {
-					videoSize.height
-				}
-				val height = if (videoSize.unappliedRotationDegrees % 180 == 0) {
-					videoSize.height
-				} else {
-					videoSize.width
-				}
-				if (height > 0) {
-					val ratio = (width * videoSize.pixelWidthHeightRatio) / height
-					videoAspectRatio = ratio.coerceAtLeast(0.1f)
-				}
-			}
-		}
-		exoPlayer.addListener(listener)
-		onDispose {
-			exoPlayer.removeListener(listener)
-		}
-	}
-
 	LaunchedEffect(selectedVideoUri) {
 		val uri = selectedVideoUri
 		if (uri != null) {
@@ -182,198 +237,92 @@ fun YingShiPage(modifier: Modifier = Modifier) {
 		}
 	}
 
-	LaunchedEffect(isFullScreen, videoAspectRatio) {
-		val target = when {
-			!isFullScreen -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-			videoAspectRatio > 1.05f -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-			videoAspectRatio < 0.95f -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-			else -> ActivityInfo.SCREEN_ORIENTATION_SENSOR
-		}
-		if (activity != null && activity.requestedOrientation != target) {
-			activity.requestedOrientation = target
-		}
-	}
-
-	DisposableEffect(activity) {
-		onDispose {
-			if (activity != null) {
-				activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-			}
-		}
-	}
-
-	Box(modifier = modifier.fillMaxSize()) {
-		LazyColumn(
-			modifier = Modifier.fillMaxSize()
-		) {
-			item {
-				Column(
-					modifier = Modifier
-						.fillMaxWidth()
-						.background(Color.Black)
-				) {
-					Box(
-						modifier = Modifier
-							.fillMaxWidth()
-							.height(220.dp),
-						contentAlignment = Alignment.Center
-					) {
-						if (selectedVideoUri == null) {
-							Text(
-								text = "请选择要播放的视频文件",
-								color = Color.White
-							)
-						} else if (!isFullScreen) {
-							VideoPlayerWithCustomTopBar(
-								exoPlayer = exoPlayer,
-								onBack = {},
-								onExpand = { isFullScreen = true },
-								style = PlayerControlStyle.YingShi,
-								onHome = {},
-								modifier = Modifier.fillMaxSize()
-							)
-						}
-					}
-					Spacer(modifier = Modifier.height(12.dp))
-					VideoSourceSelector(
-						currentLabel = selectedVideoLabel,
-						onPlayRaw = {
-							val firstRaw = rawVideos.firstOrNull()
-							if (firstRaw != null) {
-								selectedVideoUri = firstRaw.uri
-								selectedVideoLabel = firstRaw.label
-								pickerError = null
-							} else {
-								pickerError = "没有可用的内置视频"
-							}
-						},
-						onPickLocal = {
-							pickerError = null
-							openDocumentLauncher.launch(arrayOf("video/*"))
-						}
-					)
-					if (pickerError != null) {
-						Text(
-							text = pickerError ?: "",
-							color = Color(0xFFFF8A80),
-							modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-							fontSize = 12.sp
-						)
-					}
-				}
-			}
-
-			stickyHeader {
-				Row(
-					modifier = Modifier
-						.fillMaxWidth()
-						.background(Color.White),
-					verticalAlignment = Alignment.CenterVertically
-				) {
-					ScrollableTabRow(
-						selectedTabIndex = pagerState.currentPage,
-						modifier = Modifier.fillMaxWidth()
-					) {
-						tabs.forEachIndexed { index, title ->
-							Tab(
-								selected = pagerState.currentPage == index,
-								onClick = {
-									coroutineScope.launch {
-										pagerState.animateScrollToPage(index)
-									}
-								}
-							) {
-								Text(
-									text = title,
-									color = if (pagerState.currentPage == index) Color.Red else Color.Gray,
-									fontSize = 12.sp,
-									modifier = Modifier.padding(vertical = 12.dp)
-								)
-							}
-						}
-					}
-				}
-			}
-
-			item {
-				HorizontalPager(
-					state = pagerState,
-					modifier = Modifier.fillMaxSize()
-				) { page ->
-					when (page) {
-						0 -> RawVideoBrowser(
-							items = rawVideos,
-							currentUri = selectedVideoUri,
-							onSelect = { item ->
-								selectedVideoUri = item.uri
-								selectedVideoLabel = item.label
-								pickerError = null
-							}
-						)
-
-						1 -> LocalVideoBrowser(
-							videos = localVideos,
-							currentUri = selectedVideoUri,
-							onAddLocalClick = {
-								pickerError = null
-								openDocumentLauncher.launch(arrayOf("video/*"))
-							},
-							onSelect = { item ->
-								selectedVideoUri = item.uri
-								selectedVideoLabel = item.displayName
-								pickerError = null
-							}
-						)
-					}
-				}
-			}
-		}
-
-		if (isFullScreen && selectedVideoUri != null) {
-			FullscreenVideoDialog(
-				exoPlayer = exoPlayer,
-				onDismiss = { isFullScreen = false }
-			)
-		}
-	}
-}
-
-@Composable
-private fun FullscreenVideoDialog(
-	exoPlayer: ExoPlayer,
-	onDismiss: () -> Unit
-) {
-	Dialog(
-		onDismissRequest = onDismiss,
-		properties = DialogProperties(usePlatformDefaultWidth = false)
+	LazyColumn(
+		modifier = modifier.fillMaxSize()
 	) {
-		Box(
-			modifier = Modifier
-				.fillMaxSize()
-				.background(Color.Black)
-		) {
-			VideoPlayerWithCustomTopBar(
-				exoPlayer = exoPlayer,
-				onBack = onDismiss,
-				onExpand = onDismiss,
-				style = PlayerControlStyle.YingShi,
-				onHome = {},
-				isFullScreen = true,
-				modifier = Modifier.fillMaxSize()
+		item {
+			Column(
+				modifier = Modifier
+					.fillMaxWidth()
+					.background(Color.Black)
+			) {
+				Box(
+					modifier = Modifier
+						.fillMaxWidth()
+						.height(220.dp),
+					contentAlignment = Alignment.Center
+				) {
+					if (selectedVideoUri == null) {
+						Text(
+							text = "请选择要播放的视频文件",
+							color = Color.White
+						)
+					} else {
+						VideoPlayerWithCustomTopBar(
+							exoPlayer = exoPlayer,
+							onBack = {},
+							onExpand = {}
+						)
+					}
+				}
+				Spacer(modifier = Modifier.height(12.dp))
+				VideoSourceSelector(
+					currentLabel = selectedVideoLabel,
+					onPlayRaw = {
+						val firstRaw = rawVideos.firstOrNull()
+						if (firstRaw != null) {
+							selectedVideoUri = firstRaw.uri
+							selectedVideoLabel = firstRaw.label
+							pickerError = null
+						} else {
+							pickerError = "没有可用的内置视频"
+						}
+					},
+					onPickLocal = {
+						pickerError = null
+						openDocumentLauncher.launch(arrayOf("video/*"))
+					}
+				)
+				if (pickerError != null) {
+					Text(
+						text = pickerError ?: "",
+						color = Color(0xFFFF8A80),
+						modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+						fontSize = 12.sp
+					)
+				}
+			}
+		}
+
+		item {
+			RawVideoBrowser(
+				items = rawVideos,
+				currentUri = selectedVideoUri,
+				onSelect = { item ->
+					selectedVideoUri = item.uri
+					selectedVideoLabel = item.label
+					pickerError = null
+				}
+			)
+		}
+
+		item {
+			LocalVideoBrowser(
+				videos = localVideos,
+				currentUri = selectedVideoUri,
+				onAddLocalClick = {
+					pickerError = null
+					openDocumentLauncher.launch(arrayOf("video/*"))
+				},
+				onSelect = { item ->
+					selectedVideoUri = item.uri
+					selectedVideoLabel = item.displayName
+					pickerError = null
+				}
 			)
 		}
 	}
 }
-
-private fun Context.findActivity(): Activity? {
-	var current: Context? = this
-	while (current is ContextWrapper) {
-		if (current is Activity) return current
-		current = current.baseContext
-	}
-	return current as? Activity
-}
-
 
 private data class RawVideoItem(
 	val label: String,
@@ -520,22 +469,13 @@ private fun VideoSourceSelector(
 		)
 		Spacer(modifier = Modifier.height(8.dp))
 		Row(
-			horizontalArrangement = Arrangement.spacedBy(12.dp),
-			verticalAlignment = Alignment.CenterVertically
+			horizontalArrangement = Arrangement.spacedBy(12.dp)
 		) {
-			Button(
-				onClick = onPlayRaw,
-				modifier = Modifier.defaultMinSize(minWidth = 0.dp, minHeight = 36.dp),
-				contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-			) {
-				Text(text = "播放内置视频", fontSize = 12.sp)
+			Button(onClick = onPlayRaw) {
+				Text("播放内置视频")
 			}
-			Button(
-				onClick = onPickLocal,
-				modifier = Modifier.defaultMinSize(minWidth = 0.dp, minHeight = 36.dp),
-				contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-			) {
-				Text(text = "选择本地视频", fontSize = 12.sp)
+			Button(onClick = onPickLocal) {
+				Text("选择本地视频")
 			}
 		}
 	}
