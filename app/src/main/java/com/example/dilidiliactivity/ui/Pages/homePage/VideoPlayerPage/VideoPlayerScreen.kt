@@ -104,8 +104,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
+import timber.log.Timber
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import androidx.navigation.NavController
@@ -198,14 +198,14 @@ fun VideoPlayerScreen(
         errorMessage = null
         try {
             //通过数据库查询bvid对应的archive数据
-            Log.d(TAG,"videoId\n"+videoId.trim())
+            Timber.d("videoId\n"+videoId.trim())
             var archive = repository.getArchiveByBvid(videoId.trim())
-            Log.d(TAG,"archive\n"+archive.toString())
+            Timber.d("archive\n"+archive.toString())
 
             if (archive != null) {
                 currentArchive = archive
                 userInfo = archive.toUserInfo() // ⚡ 更新最新的
-                Log.d(TAG,"currentArchive：+${currentArchive}")
+                Timber.d("currentArchive：+${currentArchive}")
 
             } else {
                 errorMessage = "视频不存在"
@@ -216,7 +216,7 @@ fun VideoPlayerScreen(
             //通过网络获取视频数据，但是没有相关的接口
 //             archive = repository.getArchiveByBvid(videoId)
 //                ?: repository.getVideoDetail(videoId) // 网络接口
-            Log.d(TAG,"通过archive内容获取playUrl")
+            Timber.d("通过archive内容获取playUrl")
             val BASE_PLAY_URL = "https://player.bilibili.com/player.html"
             val bvid = currentArchive.bvid
             val aid = currentArchive.aid
@@ -227,18 +227,18 @@ fun VideoPlayerScreen(
             val page = 1
             val mid = currentArchive.owner.mid
             playUrl = "$BASE_PLAY_URL?aid=$aid&cid=$cid&page=$page"
-            Log.d(TAG,"bvid：${bvid}")
-            Log.d(TAG,"aid：${aid}")
-            Log.d(TAG,"cid：${cid}")
-            Log.d(TAG,"mid：${mid}")
+            Timber.d("bvid：${bvid}")
+            Timber.d("aid：${aid}")
+            Timber.d("cid：${cid}")
+            Timber.d("mid：${mid}")
 
-            Log.d(TAG,"playUrl：${playUrl}")
-            Log.d(TAG,"playUrl_watch_place1：${playUrl}")
+            Timber.d("playUrl：${playUrl}")
+            Timber.d("playUrl_watch_place1：${playUrl}")
 //            userInfo = currentArchive.toUserInfo()
             videoInfo = currentArchive.toVideoInfo()
 
-            Log.d(TAG,"videoInfo：${videoInfo}")
-            Log.d(TAG,"userInfor：${userInfo}")
+            Timber.d("videoInfo：${videoInfo}")
+            Timber.d("userInfor：${userInfo}")
 
             //更新相关推荐视频
             relatedVideoVM.loadVideos(bvid)
@@ -249,14 +249,14 @@ fun VideoPlayerScreen(
             isLoading = false
         }
     }
-    Log.d(TAG,"playUrl_watch_place2：${playUrl}")
+    Timber.d("playUrl_watch_place2：${playUrl}")
 
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
         // 加载视频详情 + 返回拓展按钮
         item {
-            Log.d(TAG,"playUrl_watch_place3：${playUrl}")
+            Timber.d("playUrl_watch_place3：${playUrl}")
 
             VideoPlayByWebView(
                 playUrl = playUrl,
@@ -329,7 +329,7 @@ fun VideoPlayerScreen(
                         // 其他视频列表
                         Column {
                             val videoCount = currentArchive.toUserInfo().videoCount.toDisplayCount()
-                            Log.d(TAG,"videoCount：${videoCount}")
+                            Timber.d("videoCount：${videoCount}")
                             //up主信息
                             UpInfoBar(
                                 avatar = userInfo.avatar.toString(),
@@ -351,7 +351,7 @@ fun VideoPlayerScreen(
                                 }
                                 is VideoUiState.Success -> {
                                     val archives = (relatedUiState as VideoUiState.Success).archives
-                                    Log.d(TAG,"archives：${archives}")
+                                    Timber.d("archives：${archives}")
                                     archives.forEach { archive ->
                                         val uiModel = archive.toUiModel()
                                         VideoIntroCard(uiModel, onVideoClick = {
@@ -924,9 +924,9 @@ fun PopularPreciousPageInLazyColumn(
 @OptIn(UnstableApi::class)
 @Composable
 fun VideoHeader(video: Archive,videoInfo: VideoInfo) {
-    Log.d("VideoHeader", "video: $video")
+    Timber.d( "video: $video")
     val videoInfo = video.toVideoInfo()
-    Log.d("VideoHeader", "videoInfo: $videoInfo")
+    Timber.d( "videoInfo: $videoInfo")
 
     var like by remember { mutableStateOf(videoInfo.likes) }
     var liked by remember { mutableStateOf(false) }
@@ -1620,7 +1620,7 @@ suspend fun getBiliVideoUrl(archive: Archive): String? = withContext(Dispatchers
             } else null
         }
     } catch (e: Exception) {
-        e.printStackTrace()
+        Timber.e(e, "获取视频播放地址失败")
         null
     }
 }

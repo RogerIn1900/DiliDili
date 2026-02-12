@@ -55,8 +55,8 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
+import timber.log.Timber
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.RawResourceDataSource
 import androidx.media3.exoplayer.ExoPlayer
@@ -108,9 +108,9 @@ fun YingShiPage(modifier: Modifier = Modifier) {
 						Intent.FLAG_GRANT_READ_URI_PERMISSION
 					)
 				} catch (securityException: SecurityException) {
-					Log.w(
-						TAG,
-						"无法获取持久读取权限: ${securityException.message}"
+					Timber.w(
+						securityException,
+						"无法获取持久读取权限"
 					)
 				}
 
@@ -171,7 +171,7 @@ fun YingShiPage(modifier: Modifier = Modifier) {
 	LaunchedEffect(selectedVideoUri) {
 		val uri = selectedVideoUri
 		if (uri != null) {
-			Log.d(TAG, "加载视频：$uri")
+			Timber.d( "加载视频：$uri")
 			exoPlayer.setMediaItem(MediaItem.fromUri(uri))
 			exoPlayer.prepare()
 		} else {

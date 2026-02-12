@@ -1,6 +1,5 @@
 package com.example.dilidiliactivity.ui.Pages.homePage.RandomVideo
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,10 +18,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import timber.log.Timber
 
 @Composable
 fun RandomVideo(randomVideo: RandomVideoViewModel = hiltViewModel()) {
-    val TAG = "RandomVideo"
     val uiState = randomVideo.uiState
     val ps = 7
     val rid = 1
@@ -31,7 +30,7 @@ fun RandomVideo(randomVideo: RandomVideoViewModel = hiltViewModel()) {
     LaunchedEffect(Unit) {
         randomVideo.loadRandomVideos(ps = ps, rid = rid)
     }
-    Log.d(TAG, "PLAY_URL: \n${randomVideo.PLAY_URL}")
+    Timber.d("PLAY_URL: %s", randomVideo.PLAY_URL)
 
     if (uiState == null) {
         Box(

@@ -10,6 +10,7 @@ import com.example.dilidiliactivity.data.local.PopularVideoData.PopularVideoData
 import com.example.dilidiliactivity.data.local.PopularVideoData.ShowInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -41,8 +42,8 @@ class PopularVideoViewModel @Inject constructor(
                         pubdate = video.pubdate
                     )
                 }
-            } catch (e: Exception){
-                e.printStackTrace()
+            } catch (e: Exception) {
+                Timber.e(e, "加载热门视频失败")
             }
         }
     }

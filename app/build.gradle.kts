@@ -142,6 +142,9 @@ dependencies {
     // Hilt 与 Jetpack ViewModel 集成
     implementation ("androidx.hilt:hilt-navigation-compose:1.2.0")
 
+    // Timber 日志
+    implementation("com.jakewharton.timber:timber:5.0.1")
+
     // Unit test
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
     testImplementation("io.mockk:mockk:1.13.13")

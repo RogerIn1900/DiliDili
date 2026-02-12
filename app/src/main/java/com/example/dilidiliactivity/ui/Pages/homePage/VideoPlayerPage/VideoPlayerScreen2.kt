@@ -48,8 +48,8 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.MediaItem
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
+import timber.log.Timber
 import androidx.media3.datasource.RawResourceDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavController
@@ -125,9 +125,9 @@ fun VideoPlayerScreen2(
                         Intent.FLAG_GRANT_READ_URI_PERMISSION
                     )
                 } catch (securityException: SecurityException) {
-                    Log.w(
-                        TAG,
-                        "无法获取持久读取权限: ${securityException.message}"
+                    Timber.w(
+                        securityException,
+                        "无法获取持久读取权限"
                     )
                 }
                 selectedVideoUri = uri
@@ -153,7 +153,7 @@ fun VideoPlayerScreen2(
     LaunchedEffect(selectedVideoUri) {
         val uri = selectedVideoUri
         if (uri != null) {
-            Log.d(TAG, "加载本地播放链接：$uri")
+            Timber.d( "加载本地播放链接：$uri")
             exoPlayer.setMediaItem(MediaItem.fromUri(uri))
             exoPlayer.prepare()
         } else {
@@ -177,7 +177,7 @@ fun VideoPlayerScreen2(
                 errorMessage = "视频不存在"
             }
         } catch (e: Exception) {
-            Log.e(TAG, "加载视频失败: ${e.message}")
+            Timber.e( "加载视频失败: ${e.message}")
             errorMessage = "加载失败: ${e.message}"
         }
     }

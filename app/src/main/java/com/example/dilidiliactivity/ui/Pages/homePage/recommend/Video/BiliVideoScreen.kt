@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 import org.json.JSONObject
+import timber.log.Timber
 
 
 data class VideoInfo(
@@ -44,7 +45,7 @@ fun BiliVideoScreen(bvUrl: String) {
                     )
                 } else null
             } catch (e: Exception) {
-                e.printStackTrace()
+                Timber.e(e, "解析视频信息失败")
                 null
             }
         }

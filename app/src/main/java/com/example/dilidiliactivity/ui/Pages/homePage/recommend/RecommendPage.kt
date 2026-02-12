@@ -1,6 +1,5 @@
 package com.example.dilidiliactivity.ui.Pages.homePage.recommend
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -27,6 +26,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
 import com.example.dilidiliactivity.ui.Pages.homePage.RandomVideo.RandomVideoViewModel
+import timber.log.Timber
 import com.example.dilidiliactivity.ui.Pages.homePage.RandomVideo.WebView
 
 
@@ -54,7 +54,7 @@ fun BiliRegionScreen(
         randomVideo.loadRandomVideos(ps = ps, rid = rid)
     }
 
-    Log.d(TAG, "PLAY_URL: \n$PLAY_URL")
+    Timber.d("PLAY_URL: %s", PLAY_URL)
 
     if (uiState == null) {
         Box(
@@ -67,7 +67,7 @@ fun BiliRegionScreen(
         LazyColumn(modifier = Modifier.padding(16.dp)) {
             item {
                 val archives = uiState.data.archives
-                Log.d(TAG, "archives" + archives)
+                Timber.d("archives: %s", archives)
                 if (archives.isEmpty()) {
                     Text("没有视频数据")
                 } else {
@@ -89,7 +89,7 @@ fun BiliRegionScreen(
                                         .clip(RoundedCornerShape(8.dp)),
                                     contentScale = ContentScale.Crop
                                 )
-                                Log.d(TAG, "picUrl\n" + picUrl)
+                                Timber.d("picUrl: %s", picUrl)
                             }
                         }
                         Divider(modifier = Modifier.padding(vertical = 8.dp))

@@ -1,6 +1,5 @@
 package com.example.dilidiliactivity.ui.Pages.homePage.RandomVideo
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -13,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -20,7 +20,6 @@ class RandomVideoViewModel @Inject constructor(
     private val api: BilibiliApi
 ) : ViewModel() {
     val BASE_PLAY_URL = "https://player.bilibili.com/player.html"
-    val TAG = "RandomVideoViewModel"
 
     var uiState by mutableStateOf<DynamicRegionResponse?>(null)
         private set
@@ -56,10 +55,10 @@ class RandomVideoViewModel @Inject constructor(
 
                     "$BASE_PLAY_URL?aid=$aid&cid=$cid&page=$page"
                 }
-                Log.d(TAG, "playUrlList: $playUrlList")
-                Log.d(TAG, "bvid: $bvid \ncid: $cid")
+                Timber.d("playUrlList: %s", playUrlList)
+                Timber.d("bvid: %s, cid: %s", bvid, cid)
             } catch (e: Exception) {
-                e.printStackTrace()
+                Timber.e(e, "加载随机视频失败")
             }
         }
     }
