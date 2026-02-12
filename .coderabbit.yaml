@@ -1,0 +1,76 @@
+# CodeRabbit Configuration
+# 文档: https://docs.coderabbit.ai/reference/configuration
+
+language: zh-CN
+tone_instructions: "请用中文给出简洁、有建设性的代码审查意见，重点关注代码质量和潜在 bug。"
+early_access: false
+enable_free_tier: true
+
+reviews:
+  profile: assertive
+  request_changes_workflow: true
+  high_level_summary: true
+  high_level_summary_in_walkthrough: true
+  collapse_walkthrough: false
+  changed_files_summary: true
+  sequence_diagrams: true
+  estimate_code_review_effort: true
+  assess_linked_issues: true
+  related_issues: true
+  related_prs: true
+  suggested_labels: true
+  auto_apply_labels: false
+  suggested_reviewers: true
+  auto_assign_reviewers: false
+  poem: false
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+    base_branches:
+      - main
+      - develop
+
+  path_filters:
+    - "!**/*.xml"
+    - "!**/*.json"
+    - "!**/build/**"
+    - "!**/generated/**"
+    - "!**/.gradle/**"
+    - "!**/.idea/**"
+    - "!**/gradle/**"
+    - "!**/*.pro"
+
+  path_instructions:
+    - path: "app/src/main/java/**/*.kt"
+      instructions: |
+        这是一个 Android Kotlin 项目（Jetpack Compose + Hilt + Room + Retrofit）。
+        请检查：
+        1. 包名是否全小写
+        2. Compose 函数是否遵循无副作用原则
+        3. ViewModel 中是否正确使用协程和 Flow
+        4. 是否有内存泄漏风险（如 Activity/Context 引用）
+        5. Hilt 依赖注入是否正确
+    - path: "app/src/test/**/*.kt"
+      instructions: |
+        请检查单元测试的覆盖度和断言质量，确认是否使用了合适的 mock 框架。
+    - path: "app/src/main/java/**/navigation/**"
+      instructions: |
+        导航相关代码，请检查路由常量是否集中管理，避免硬编码字符串。
+
+  tools:
+    gitleaks:
+      enabled: true
+    semgrep:
+      enabled: true
+
+chat:
+  art: false
+  auto_reply: true
+
+knowledge_base:
+  code_guidelines:
+    enabled: true
+  learnings:
+    scope: auto
