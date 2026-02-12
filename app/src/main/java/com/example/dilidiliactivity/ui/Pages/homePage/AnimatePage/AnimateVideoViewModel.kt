@@ -8,7 +8,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 
@@ -38,10 +37,7 @@ class AnimateVideoViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = VideoUiState.Loading
             try {
-                // 限定 9 秒超时
-                val archives = withTimeout(9000L) {
-                    repo.getVideoList(ps, rid)
-                }
+                val archives = repo.getVideoList(ps, rid)
                 // 初始加载时，直接设置列表
                 _allArchives.value = archives
                 _uiState.value = VideoUiState.Success(_allArchives.value)
@@ -56,10 +52,7 @@ class AnimateVideoViewModel @Inject constructor(
         viewModelScope.launch {
             _isRefreshing.value = true
             try {
-                // 限定 9 秒超时
-                val newArchives = withTimeout(9000L) {
-                    repo.getVideoList(ps, rid)
-                }
+                val newArchives = repo.getVideoList(ps, rid)
                 // 将新数据添加到现有列表的顶部，并去重（基于 bvid）
                 val existingBvids = _allArchives.value.map { it.bvid }.toSet()
                 val uniqueNewArchives = newArchives.filter { it.bvid !in existingBvids }

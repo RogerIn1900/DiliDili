@@ -63,8 +63,6 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.ui.PlayerView
 import com.example.dilidiliactivity.R
-import com.example.dilidiliactivity.data.remote.ApiClient.ApiClient
-import com.example.dilidiliactivity.ui.Pages.homePage.RandomVideo.RandomVideoViewModel
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.PlayerControlStyle
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoPlayerWithCustomTopBar
 import kotlinx.coroutines.launch

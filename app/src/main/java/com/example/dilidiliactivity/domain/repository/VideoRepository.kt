@@ -86,4 +86,15 @@ class VideoRepository(
         }
         return relatedVideos.data
     }
+
+    suspend fun getPlayUrl(cid: String, bvid: String, qn: Int = 80): String? {
+        return try {
+            val resp = api.getPlayUrl(cid = cid, bvid = bvid, qn = qn)
+            if (!resp.isSuccessful) return null
+            val body = resp.body() ?: return null
+            body.data.durl.firstOrNull()?.url
+        } catch (_: Exception) {
+            null
+        }
+    }
 }

@@ -46,7 +46,6 @@ import com.example.dilidiliactivity.R
 import com.example.dilidiliactivity.data.local.HomePageData.HomeTopBarTabs
 import com.example.dilidiliactivity.data.local.HomePageData.TabItem
 import com.example.dilidiliactivity.data.local.PopularPreciousResponse.PopularPreciousResponse
-import com.example.dilidiliactivity.data.remote.ApiClient.RetrofitClient
 import com.example.dilidiliactivity.ui.Pages.PopularPreciousPage.PopularPreciousPage
 import com.example.dilidiliactivity.ui.Pages.homePage.AnimatePage.AnimatePage
 import com.example.dilidiliactivity.ui.Pages.homePage.RandomVideo.RandomVideo
