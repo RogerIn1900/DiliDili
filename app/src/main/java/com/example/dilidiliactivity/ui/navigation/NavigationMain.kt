@@ -5,17 +5,15 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.dilidiliactivity.data.local.archive.AppDatabase
-import com.example.dilidiliactivity.domain.repository.VideoRepository
-import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.SharedVideoViewModel
-import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoPlayerScreen
-import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoPlayerScreen2
-import com.example.dilidiliactivity.ui.Pages.minePage.FullScreenPage
-import com.example.dilidiliactivity.ui.navigation.TrunckFrame.MainFrame
+import com.example.dilidiliactivity.ui.pages.homepage.videoplayerpage.SharedVideoViewModel
+import com.example.dilidiliactivity.ui.pages.homepage.videoplayerpage.VideoPlayerScreen
+import com.example.dilidiliactivity.ui.pages.homepage.videoplayerpage.VideoPlayerScreen2
+import com.example.dilidiliactivity.ui.pages.minepage.FullScreenPage
+import com.example.dilidiliactivity.ui.navigation.trunkframe.MainFrame
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -30,16 +28,14 @@ fun RootNavHost(navHostController: NavHostController,
 
     AnimatedNavHost(
         navController = rootNavController,
-        startDestination = TrunckScreen.MainFrame.route
+        startDestination = TrunkScreen.MainFrame.route
     ) {
-        // 原底部导航栏页面
-        composable( TrunckScreen.MainFrame.route) {
+        composable( TrunkScreen.MainFrame.route) {
             MainFrame( navHostController,paddingValues = paddingValues,rootNavController = rootNavController,sharedVm)
         }
 
-        // 全屏覆盖页面
         composable(
-            TrunckScreen.FullScreenPage.route,
+            TrunkScreen.FullScreenPage.route,
             enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
             exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) },
             popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
@@ -48,20 +44,8 @@ fun RootNavHost(navHostController: NavHostController,
             FullScreenPage(rootNavController)
         }
 
-//        //视频播放页面
-//        composable(
-//            "player/{videoId}",
-//            enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
-//            exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) },
-//            popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
-//            popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) }
-//        ) { backStackEntry ->
-//            val videoId = backStackEntry.arguments?.getString("videoId") ?: ""
-//            VideoPlayerScreen(videoId, sharedVm)
-//        }
-        // NavHost 中的跳转
         composable(
-            "player/{videoId}",
+            Routes.PLAYER,
             enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
             exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) },
             popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
@@ -69,26 +53,20 @@ fun RootNavHost(navHostController: NavHostController,
         ) { backStackEntry ->
             val videoId = backStackEntry.arguments?.getString("videoId") ?: ""
 
-            // 获取 Context 和 Repository
-            val context = LocalContext.current
-            val repository = VideoRepository(AppDatabase.getInstance(context).archiveDao())
-
-            // 调用 VideoPlayerScreen
             VideoPlayerScreen(
                 rootNavController = rootNavController,
                 videoId = videoId,
-                repository = repository,
                 onBack = {
                     rootNavController.popBackStack()
                 },
                 onExpand = {
-                    rootNavController.navigate(TrunckScreen.FullScreenPage.route)
+                    rootNavController.navigate(TrunkScreen.FullScreenPage.route)
                 }
             )
         }
 
         composable(
-            "playerLocal/{videoId}",
+            Routes.PLAYER_LOCAL,
             enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
             exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) },
             popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
@@ -96,23 +74,16 @@ fun RootNavHost(navHostController: NavHostController,
         ) { backStackEntry ->
             val videoId = backStackEntry.arguments?.getString("videoId") ?: ""
 
-            // 获取 Context 和 Repository
-            val context = LocalContext.current
-            val repository = VideoRepository(AppDatabase.getInstance(context).archiveDao())
-
-            // 调用 VideoPlayerScreen
             VideoPlayerScreen2(
                 rootNavController = rootNavController,
                 videoId = videoId,
-                repository = repository,
                 onBack = {
                     rootNavController.popBackStack()
                 },
                 onExpand = {
-                    rootNavController.navigate(TrunckScreen.FullScreenPage.route)
+                    rootNavController.navigate(TrunkScreen.FullScreenPage.route)
                 }
             )
         }
     }
 }
-

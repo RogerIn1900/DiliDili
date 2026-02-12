@@ -9,10 +9,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.example.dilidiliactivity.data.local.ArchiveSingleton
-import com.example.dilidiliactivity.ui.navigation.TrunckFrame.TrunckFrame
-import dagger.hilt.android.HiltAndroidApp
+import com.example.dilidiliactivity.ui.navigation.trunkframe.TrunkFrame
+import dagger.hilt.android.AndroidEntryPoint
 
-//@HiltAndroidApp
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -110,9 +110,9 @@ class MainActivity : ComponentActivity() {
 //                "ad" -> AdScreen {
 //                    currentScreen = "truck"
 //                }
-//                "truck" -> TrunckFrame()
+//                "truck" -> TrunkFrame()
 //            }
-            TrunckFrame()
+            TrunkFrame()
         }
     }
 }

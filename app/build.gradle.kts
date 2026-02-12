@@ -3,12 +3,10 @@ import org.gradle.kotlin.dsl.implementation
 val room_version = "2.7.2"
 
 plugins {
-    val room_version = "2.7.2"
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("org.jetbrains.kotlin.plugin.serialization")
-    id("androidx.room") version "$room_version" apply false
     id ("kotlin-kapt")
     id ("com.google.dagger.hilt.android")
 }
@@ -91,9 +89,10 @@ dependencies {
     implementation("org.json:json:20230227")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
-// Retrofit
+// Retrofit + OkHttp
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
     // Coil Compose
@@ -137,10 +136,18 @@ dependencies {
 //    // optional - Paging 3 Integration
 //    implementation("androidx.room:room-paging:$room_version")
 
-    implementation( "com.google.dagger:hilt-android:2.52")
-    kapt ("com.google.dagger:hilt-compiler:2.52")
+    implementation( "com.google.dagger:hilt-android:2.56.1")
+    kapt ("com.google.dagger:hilt-compiler:2.56.1")
 
     // Hilt 与 Jetpack ViewModel 集成
     implementation ("androidx.hilt:hilt-navigation-compose:1.2.0")
+
+    // Timber 日志
+    implementation("com.jakewharton.timber:timber:5.0.1")
+
+    // Unit test
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
+    testImplementation("io.mockk:mockk:1.13.13")
+    testImplementation("app.cash.turbine:turbine:1.2.0")
 
 }

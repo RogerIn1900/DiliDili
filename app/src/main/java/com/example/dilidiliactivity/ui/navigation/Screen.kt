@@ -13,8 +13,20 @@ package com.example.dilidiliactivity.ui.navigation
 sealed class Screen( val route: String,val  destination: String) {
     object LoginPage : Screen(route = "LoginPage",destination = "登陆")
     object HomePage : Screen(route = "HomePage",destination = "首页")
-    object FrendsPage : Screen(route = "FrendsPage",destination = "朋友")
+    object FriendsPage : Screen(route = "FriendsPage",destination = "朋友")
     object PublishPage : Screen(route = "PublishPage",destination = "发布")
     object MessagePage : Screen(route = "MessagePage",destination = "消息")
     object MinePage : Screen(route = "MinePage",destination = "我的")
+}
+
+/**
+ * 集中管理导航路由常量，消除硬编码字符串
+ */
+object Routes {
+    const val PLAYER = "player/{videoId}"
+    const val PLAYER_LOCAL = "playerLocal/{videoId}"
+    const val FULL_SCREEN = "FullScreenPage"
+
+    fun player(bvid: String) = "player/$bvid"
+    fun playerLocal(videoId: String) = "playerLocal/$videoId"
 }

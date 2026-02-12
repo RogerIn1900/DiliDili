@@ -4,8 +4,10 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 
-@Database(entities = [ArchiveEntity::class], version = 1)
+@Database(entities = [ArchiveEntity::class], version = 2, exportSchema = false)
+@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun archiveDao(): ArchiveDao
 
@@ -19,7 +21,8 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "archive_table"
-                ).build().also { INSTANCE = it }
+                ).fallbackToDestructiveMigration()
+                    .build().also { INSTANCE = it }
             }
         }
     }
