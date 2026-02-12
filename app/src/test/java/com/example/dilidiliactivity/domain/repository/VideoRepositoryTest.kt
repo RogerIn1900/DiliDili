@@ -10,7 +10,7 @@ import com.example.dilidiliactivity.data.local.archive.ArchiveDao
 import com.example.dilidiliactivity.data.local.archive.ArchiveEntity
 import com.example.dilidiliactivity.data.local.archive.toDomain
 import com.example.dilidiliactivity.data.remote.api.BilibiliApi
-import com.example.dilidiliactivity.ui.Pages.homePage.AnimatePage.AnimateVideoViewModelTest.Companion.createArchive
+import com.example.dilidiliactivity.ui.pages.homepage.animatepage.AnimateVideoViewModelTest.Companion.createArchive
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

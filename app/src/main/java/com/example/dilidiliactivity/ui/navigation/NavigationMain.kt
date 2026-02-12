@@ -9,11 +9,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.SharedVideoViewModel
-import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoPlayerScreen
-import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoPlayerScreen2
-import com.example.dilidiliactivity.ui.Pages.minePage.FullScreenPage
-import com.example.dilidiliactivity.ui.navigation.TrunkFrame.MainFrame
+import com.example.dilidiliactivity.ui.pages.homepage.videoplayerpage.SharedVideoViewModel
+import com.example.dilidiliactivity.ui.pages.homepage.videoplayerpage.VideoPlayerScreen
+import com.example.dilidiliactivity.ui.pages.homepage.videoplayerpage.VideoPlayerScreen2
+import com.example.dilidiliactivity.ui.pages.minepage.FullScreenPage
+import com.example.dilidiliactivity.ui.navigation.trunkframe.MainFrame
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 
 @OptIn(ExperimentalAnimationApi::class)

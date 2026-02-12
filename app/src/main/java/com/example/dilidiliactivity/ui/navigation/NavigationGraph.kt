@@ -5,12 +5,12 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.dilidiliactivity.ui.Pages.PublishPage.PublishPage
-import com.example.dilidiliactivity.ui.Pages.friendsPage.FriendsPage
-import com.example.dilidiliactivity.ui.Pages.homePage.HomePage
-import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.SharedVideoViewModel
-import com.example.dilidiliactivity.ui.Pages.messagePage.MessagePage
-import com.example.dilidiliactivity.ui.Pages.minePage.MinePage
+import com.example.dilidiliactivity.ui.pages.publishpage.PublishPage
+import com.example.dilidiliactivity.ui.pages.friendspage.FriendsPage
+import com.example.dilidiliactivity.ui.pages.homepage.HomePage
+import com.example.dilidiliactivity.ui.pages.homepage.videoplayerpage.SharedVideoViewModel
+import com.example.dilidiliactivity.ui.pages.messagepage.MessagePage
+import com.example.dilidiliactivity.ui.pages.minepage.MinePage
 
 
 @Composable

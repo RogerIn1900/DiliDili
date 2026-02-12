@@ -9,7 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.example.dilidiliactivity.data.local.ArchiveSingleton
-import com.example.dilidiliactivity.ui.navigation.TrunkFrame.TrunkFrame
+import com.example.dilidiliactivity.ui.navigation.trunkframe.TrunkFrame
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
