@@ -18,3 +18,15 @@ sealed class Screen( val route: String,val  destination: String) {
     object MessagePage : Screen(route = "MessagePage",destination = "消息")
     object MinePage : Screen(route = "MinePage",destination = "我的")
 }
+
+/**
+ * 集中管理导航路由常量，消除硬编码字符串
+ */
+object Routes {
+    const val PLAYER = "player/{videoId}"
+    const val PLAYER_LOCAL = "playerLocal/{videoId}"
+    const val FULL_SCREEN = "FullScreenPage"
+
+    fun player(bvid: String) = "player/$bvid"
+    fun playerLocal(videoId: String) = "playerLocal/$videoId"
+}

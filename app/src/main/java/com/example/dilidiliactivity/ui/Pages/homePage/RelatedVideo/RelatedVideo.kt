@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.dilidiliactivity.ui.navigation.Routes
 import com.example.dilidiliactivity.data.mapper.toUiModel
 import com.example.dilidiliactivity.ui.Pages.homePage.AnimatePage.VideoUiState
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoIntroCard
@@ -67,7 +68,7 @@ fun RelatedVideo(
                     VideoIntroCard(
                         uiModel,
                         onVideoClick = {
-                            rootNavController.navigate("player/${archive.bvid}")
+                            rootNavController.navigate(Routes.player(archive.bvid))
                         }
                     )
                 }

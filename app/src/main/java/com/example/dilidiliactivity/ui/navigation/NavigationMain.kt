@@ -45,7 +45,7 @@ fun RootNavHost(navHostController: NavHostController,
         }
 
         composable(
-            "player/{videoId}",
+            Routes.PLAYER,
             enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
             exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) },
             popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
@@ -66,7 +66,7 @@ fun RootNavHost(navHostController: NavHostController,
         }
 
         composable(
-            "playerLocal/{videoId}",
+            Routes.PLAYER_LOCAL,
             enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
             exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) },
             popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) },

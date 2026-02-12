@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import com.example.dilidiliactivity.ui.navigation.Routes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,7 +23,7 @@ fun MinePage(paddingValues: PaddingValues,rootNavController: NavHostController) 
             TopAppBar(
                 title = { Text("首页") },
                 actions = {
-                    Button(onClick = { rootNavController.navigate("fullScreenPage") }) {
+                    Button(onClick = { rootNavController.navigate(Routes.FULL_SCREEN) }) {
                         Text("跳转全屏页面")
                     }
                 }

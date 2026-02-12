@@ -121,6 +121,7 @@ import com.example.dilidiliactivity.data.mapper.toUserInfo
 import com.example.dilidiliactivity.data.mapper.toVideoInfo
 import com.example.dilidiliactivity.data.local.archive.Archive
 import com.example.dilidiliactivity.domain.repository.VideoRepository
+import com.example.dilidiliactivity.ui.navigation.Routes
 import com.example.dilidiliactivity.ui.Pages.homePage.AnimatePage.VideoUiState
 import com.example.dilidiliactivity.ui.Pages.homePage.RandomVideo.WebView
 import com.example.dilidiliactivity.ui.Pages.homePage.RelatedVideo.RelatedVideo
@@ -355,7 +356,7 @@ fun VideoPlayerScreen(
                                     archives.forEach { archive ->
                                         val uiModel = archive.toUiModel()
                                         VideoIntroCard(uiModel, onVideoClick = {
-                                            rootNavController.navigate("player/${archive.bvid}")
+                                            rootNavController.navigate(Routes.player(archive.bvid))
                                         })
                                     }
                                 }
@@ -891,7 +892,7 @@ fun PopularPreciousPageInLazyColumn(
     rootNavController: NavController,
     viewModel: VideoViewModel = hiltViewModel(),
     onVideoClick: (Archive) -> Unit = { archive ->
-        rootNavController.navigate("player/${archive.bvid}")
+        rootNavController.navigate(Routes.player(archive.bvid))
     }
 ) {
     val state by viewModel.preciousState.collectAsState()

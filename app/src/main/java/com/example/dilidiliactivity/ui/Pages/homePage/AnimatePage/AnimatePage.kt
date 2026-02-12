@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.dilidiliactivity.ui.navigation.Routes
 import com.example.dilidiliactivity.data.mapper.toUiModel
 import com.example.dilidiliactivity.data.local.archive.Archive
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoIntroCard
@@ -58,7 +59,7 @@ fun AnimatePage(
                     isRefreshing = isRefreshing,
                     onRefresh = { viewModel.refreshVideos() },
                     onVideoClick = { archive ->
-                        rootNavController.navigate("player/${archive.bvid}")
+                        rootNavController.navigate(Routes.player(archive.bvid))
                     }
                 )
             }
@@ -70,7 +71,7 @@ fun AnimatePage(
                 isRefreshing = isRefreshing,
                 onRefresh = { viewModel.refreshVideos() },
                 onVideoClick = { archive ->
-                    rootNavController.navigate("player/${archive.bvid}")
+                    rootNavController.navigate(Routes.player(archive.bvid))
                 }
             )
         }
@@ -90,7 +91,7 @@ fun AnimatePage(
                     isRefreshing = isRefreshing,
                     onRefresh = { viewModel.refreshVideos() },
                     onVideoClick = { archive ->
-                        rootNavController.navigate("player/${archive.bvid}")
+                        rootNavController.navigate(Routes.player(archive.bvid))
                     }
                 )
             }

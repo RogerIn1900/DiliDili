@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
+import com.example.dilidiliactivity.ui.navigation.Routes
 import com.example.dilidiliactivity.ui.Pages.homePage.AnimatePage.VideoListScreen
 
 
@@ -50,7 +51,7 @@ fun PopularPreciousPage(
 //            }
 
             VideoListScreen(list, onVideoClick = { archive->
-                rootNavController.navigate("player/${archive.bvid}")
+                rootNavController.navigate(Routes.player(archive.bvid))
             })
         }
     }

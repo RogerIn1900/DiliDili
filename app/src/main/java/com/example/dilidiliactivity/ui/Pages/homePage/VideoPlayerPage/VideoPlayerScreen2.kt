@@ -62,6 +62,7 @@ import com.example.dilidiliactivity.data.local.archive.Archive
 import com.example.dilidiliactivity.data.local.DetailsPageData.VideoInfo
 import com.example.dilidiliactivity.data.local.advertisement.AdvertisementData
 import com.example.dilidiliactivity.domain.repository.VideoRepository
+import com.example.dilidiliactivity.ui.navigation.Routes
 import com.example.dilidiliactivity.ui.Pages.homePage.AnimatePage.VideoUiState
 import com.example.dilidiliactivity.ui.Pages.homePage.RelatedVideo.RelatedVideoViewModel
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.PlayerControlStyle
@@ -314,7 +315,7 @@ fun VideoPlayerScreen2(
                                     archives.forEach { archive ->
                                         val uiModel = archive.toUiModel()
                                         VideoIntroCard(uiModel) {
-                                            rootNavController.navigate("player/${archive.bvid}")
+                                            rootNavController.navigate(Routes.player(archive.bvid))
                                         }
                                     }
                                 }
