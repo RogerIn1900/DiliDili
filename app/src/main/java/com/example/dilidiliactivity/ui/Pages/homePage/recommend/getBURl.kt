@@ -17,13 +17,6 @@ import java.util.*
 import kotlin.random.Random
 import java.time.Instant
 
-class getBURl {
-
-}
-
-
-
-
 @Composable
 fun VideoPlayer(url: String) {
     // 保持播放器实例
@@ -131,18 +124,3 @@ fun buildBiliVideoUrl2(
             "&f=u_0_0" +
             "&orderid=0,2"
 }
-
-//// ---------- 示例调用 ----------
-//@RequiresApi(Build.VERSION_CODES.O)
-//fun main() {
-//    val videoId = getVideoId("31214207828")
-//    val partPath = getPartPath(videoId)
-//    val m4sFile = getM4sFileName(videoId)
-//    val trid = generateTrid()
-//    val deadline = generateDeadline()
-//    val upsig = getUpsig()
-//    val bw = generateBw()
-//
-//    val videoUrl = buildBiliVideoUrl(videoId, partPath, m4sFile, trid, deadline, upsig, bw)
-//    println("生成的视频 URL: $videoUrl")
-//}

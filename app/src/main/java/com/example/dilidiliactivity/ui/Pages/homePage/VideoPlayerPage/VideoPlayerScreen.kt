@@ -913,11 +913,11 @@ fun PopularPreciousPageInLazyColumn(
         else -> {
             val list = state!!.data.list
             Column {
-                list.forEach {
-                    val uiModel = archive.toUiModel()  // 调用前面写的 mapper
+                list.forEach { item ->
+                    val uiModel = item.toUiModel()
                     VideoIntroCard(
                         video = uiModel,
-                        onVideoClick = { onVideoClick(archive) }
+                        onVideoClick = { onVideoClick(item) }
                     )
                 }
             }

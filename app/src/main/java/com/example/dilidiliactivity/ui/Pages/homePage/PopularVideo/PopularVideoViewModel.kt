@@ -12,9 +12,6 @@ import kotlinx.coroutines.launch
 
 class PopularVideoViewModel : ViewModel(){
     var uiState by mutableStateOf<PopularVidelData?>(null)
-//    var aid by mutableStateOf<String>("")
-//    var cid by mutableStateOf<String>("")
-//    var PLAY_PATH by mutableStateOf<String>("")
     var idList by mutableStateOf<List<Pair<String, String>>>(emptyList())
     //视频播放地址列表
     var urlList by mutableStateOf<List<String>>(emptyList())
@@ -41,10 +38,6 @@ class PopularVideoViewModel : ViewModel(){
                         pubdate = video.pubdate
                     )
                 }
-
-//                aid = uiState!!.data.list[0].aid.toString()
-//                cid = uiState!!.data.list[0].cid.toString()
-//                PLAY_PATH = "https://player.bilibili.com/player.html?aid=$aid&cid=$cid&page=1"
             } catch (e: Exception){
                 e.printStackTrace()
             }

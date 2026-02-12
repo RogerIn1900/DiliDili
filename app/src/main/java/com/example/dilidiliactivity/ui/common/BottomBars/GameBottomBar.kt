@@ -36,6 +36,3 @@ fun BottomNavigationBar(navController: NavHostController, selectedIndex: Int, on
         }
     }
 }
-
-class GameBottomBar {
-}

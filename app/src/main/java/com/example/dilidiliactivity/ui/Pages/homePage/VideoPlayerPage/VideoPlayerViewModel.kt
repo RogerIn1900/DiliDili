@@ -1,8 +1,6 @@
 package com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage
 
 import androidx.lifecycle.ViewModel
-import com.example.dilidiliactivity.data.local.VideoPlayerData.Video
-import kotlinx.coroutines.delay
 import androidx.lifecycle.viewModelScope
 import com.example.dilidiliactivity.data.local.archive.Archive
 import com.example.dilidiliactivity.domain.repository.VideoRepository
@@ -10,26 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class VideoPlayerViewModel : ViewModel() {
-    // 模拟网络请求
-    suspend fun fetchVideoDetail(videoId: String): Video {
-        delay(1000) // 假装网络延迟
-        return Video(
-            id = videoId,
-            title = "最新标题（已刷新）",
-            coverUrl = "http://example.com/cover_updated.jpg",
-            views = "999万",
-            danmu = "30万",
-            date = "2025-09-03",
-            duration = "15:40",
-            videoUrl = "http://example.com/video$videoId.mp4"
-        )
-    }
-}
-
-
-
-class VideoPlayerViewModel2(
+class VideoPlayerViewModel(
     private val repository: VideoRepository
 ) : ViewModel() {
 

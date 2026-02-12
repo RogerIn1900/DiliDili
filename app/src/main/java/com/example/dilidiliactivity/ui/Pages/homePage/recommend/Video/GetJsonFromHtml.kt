@@ -17,9 +17,6 @@ import org.jsoup.Jsoup
 import com.example.dilidiliactivity.data.local.RandomVideoData.VideoInfo
 import androidx.media3.common.util.UnstableApi
 
-class GetBaseUrl {
-}
-
 @UnstableApi
 @Composable
 fun PlayInfoScreen(url: String) {
@@ -43,39 +40,10 @@ fun PlayInfoScreen(url: String) {
 
 
 
-//    Media3Player(
-//        context = LocalContext.current,
-//        videoUrl = videoUrl.toString(),
-//        audioUrl = audioUrl.toString(),
-//        modifier = Modifier.fillMaxSize()
-//    )
-
-//    DashPlayer(videoUrl.toString(),audioUrl.toString())
-
-
-    //从json信息中获取视频和音频的url
-//    val jsonClass = VideoUrlExtractor().extractUrls(playInfo)
-//    val videoUrl = jsonClass.videoUrls?.first()
-//    val audioUrl = jsonClass.audioUrls?.first()
-    // playInfo 可能是整页 HTML，也可能是纯 JSON 字符串
-//    val urls = remember(playInfo) { extractVideoAudioUrlsFromHtmlOrJson(playInfo) }
-//    // urls?.first 是视频，urls?.second 是音频
-//    val videoUrl = urls?.first
-//    val audioUrl = urls?.second
-//    Log.d(TAG, "videoUrl: $videoUrl \n audioUrl: $audioUrl")
     Log.d(TAG, "playInfo: \n$playInfo")
     if (playInfo == null) {
         Text("加载中...")
     } else {
-        // 这里只是显示原始 JSON，可以进一步解析
-//        Text(
-//            text = "videoUrl:\n"+videoUrl ?: "未找到",
-//            modifier = Modifier.padding(16.dp)
-//        )
-//        Text(
-//            text = "audioUrl:\n"+audioUrl ?: "未找到",
-//            modifier = Modifier.padding(16.dp)
-//        )
     }
 }
 

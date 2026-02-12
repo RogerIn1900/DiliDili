@@ -10,7 +10,7 @@ class VideoPlayerViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(VideoPlayerViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return VideoPlayerViewModel() as T
+            return VideoPlayerViewModel(repository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

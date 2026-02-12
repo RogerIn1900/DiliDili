@@ -60,7 +60,6 @@ fun WebView(url:String  ){
                 // WebChromeClient 处理网页里的 JS 对话框 / 视频全屏
                 webChromeClient = WebChromeClient()
 
-                var testUrl = "https://player.bilibili.com/player.html?aid=114360349362493&cid=29489891654&page=1"
                 Log.d(TAG,"url"+url)
                 loadUrl(url)
             }
