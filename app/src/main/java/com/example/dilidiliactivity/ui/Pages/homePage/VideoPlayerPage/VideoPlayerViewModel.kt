@@ -4,12 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dilidiliactivity.data.local.archive.Archive
 import com.example.dilidiliactivity.domain.repository.VideoRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class VideoPlayerViewModel(
-    private val repository: VideoRepository
+@HiltViewModel
+class VideoPlayerViewModel @Inject constructor(
+    val repository: VideoRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(VideoPlayerUiState())

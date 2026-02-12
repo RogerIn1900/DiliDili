@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.Log
@@ -57,14 +58,12 @@ import com.example.dilidiliactivity.data.mapper.toDisplayCount
 import com.example.dilidiliactivity.data.mapper.toUiModel
 import com.example.dilidiliactivity.data.mapper.toUserInfo
 import com.example.dilidiliactivity.data.mapper.toVideoInfo
-import com.example.dilidiliactivity.data.local.archive.AppDatabase
 import com.example.dilidiliactivity.data.local.archive.Archive
 import com.example.dilidiliactivity.data.local.DetailsPageData.VideoInfo
 import com.example.dilidiliactivity.data.local.advertisement.AdvertisementData
 import com.example.dilidiliactivity.domain.repository.VideoRepository
 import com.example.dilidiliactivity.ui.Pages.homePage.AnimatePage.VideoUiState
 import com.example.dilidiliactivity.ui.Pages.homePage.RelatedVideo.RelatedVideoViewModel
-import com.example.dilidiliactivity.ui.Pages.homePage.RelatedVideo.RelatedVideoViewModelFactory
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.PlayerControlStyle
 import com.example.dilidiliactivity.R
 import kotlinx.coroutines.launch
@@ -78,15 +77,12 @@ import android.content.ContextWrapper
 fun VideoPlayerScreen2(
     rootNavController: NavController,
     videoId: String,
-    repository: VideoRepository,
     onBack: () -> Unit,
     onExpand: () -> Unit,
-    relatedVideoVM: RelatedVideoViewModel = viewModel(
-        factory = RelatedVideoViewModelFactory(
-            repo = VideoRepository(AppDatabase.getInstance(LocalContext.current).archiveDao())
-        )
-    )
+    playerViewModel: VideoPlayerViewModel = hiltViewModel(),
+    relatedVideoVM: RelatedVideoViewModel = hiltViewModel()
 ) {
+    val repository = playerViewModel.repository
     val TAG = "VideoPlayerScreen2"
     var currentArchive by remember { mutableStateOf(ArchiveSingleton.archive) }
     var errorMessage by remember { mutableStateOf<String?>(null) }

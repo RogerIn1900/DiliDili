@@ -13,28 +13,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.dilidiliactivity.data.local.DetailsPageData.VideoInfo
-import com.example.dilidiliactivity.data.local.RelatedVideos.RelatedVideosResponse
-import com.example.dilidiliactivity.data.local.archive.AppDatabase
 import com.example.dilidiliactivity.data.mapper.toUiModel
-import com.example.dilidiliactivity.domain.repository.VideoRepository
-import com.example.dilidiliactivity.ui.Pages.homePage.AnimatePage.VideoListScreen
 import com.example.dilidiliactivity.ui.Pages.homePage.AnimatePage.VideoUiState
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoIntroCard
-import kotlin.contracts.Effect
 
 @Composable
 fun RelatedVideo(
     bvid :String,
     rootNavController: NavController,
-    viewModel: RelatedVideoViewModel = viewModel (
-        factory = RelatedVideoViewModelFactory(
-            repo = VideoRepository(AppDatabase.getInstance(LocalContext.current).archiveDao())
-        )
-    )
+    viewModel: RelatedVideoViewModel = hiltViewModel()
 ){
     val uiState by viewModel.uiState.collectAsState()
     LaunchedEffect(bvid) {

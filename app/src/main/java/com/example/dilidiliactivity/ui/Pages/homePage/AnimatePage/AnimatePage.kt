@@ -19,23 +19,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.example.dilidiliactivity.data.local.archive.AppDatabase
 import com.example.dilidiliactivity.data.mapper.toUiModel
 import com.example.dilidiliactivity.data.local.archive.Archive
-import com.example.dilidiliactivity.domain.repository.VideoRepository
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoIntroCard
 
 @Composable
 fun AnimatePage(
     rootNavController: NavController,
-    viewModel: AnimateVideoViewModel = viewModel(
-        factory = AnimateVideoViewModelFactory(
-            VideoRepository(AppDatabase.getInstance(LocalContext.current).archiveDao())
-        )
-    )
+    viewModel: AnimateVideoViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val allArchives by viewModel.allArchives.collectAsState()

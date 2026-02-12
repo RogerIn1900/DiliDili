@@ -3,12 +3,10 @@ import org.gradle.kotlin.dsl.implementation
 val room_version = "2.7.2"
 
 plugins {
-    val room_version = "2.7.2"
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("org.jetbrains.kotlin.plugin.serialization")
-    id("androidx.room") version "$room_version" apply false
     id ("kotlin-kapt")
     id ("com.google.dagger.hilt.android")
 }
@@ -137,10 +135,15 @@ dependencies {
 //    // optional - Paging 3 Integration
 //    implementation("androidx.room:room-paging:$room_version")
 
-    implementation( "com.google.dagger:hilt-android:2.52")
-    kapt ("com.google.dagger:hilt-compiler:2.52")
+    implementation( "com.google.dagger:hilt-android:2.56.1")
+    kapt ("com.google.dagger:hilt-compiler:2.56.1")
 
     // Hilt 与 Jetpack ViewModel 集成
     implementation ("androidx.hilt:hilt-navigation-compose:1.2.0")
+
+    // Unit test
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
+    testImplementation("io.mockk:mockk:1.13.13")
+    testImplementation("app.cash.turbine:turbine:1.2.0")
 
 }

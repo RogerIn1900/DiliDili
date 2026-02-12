@@ -4,10 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dilidiliactivity.data.local.archive.Archive
 import com.example.dilidiliactivity.domain.repository.VideoRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import javax.inject.Inject
 
 
 sealed class VideoUiState {
@@ -16,7 +18,8 @@ sealed class VideoUiState {
     data class Error(val message: String) : VideoUiState()
 }
 
-class AnimateVideoViewModel(
+@HiltViewModel
+class AnimateVideoViewModel @Inject constructor(
     private val repo: VideoRepository
 ) : ViewModel() {
 

@@ -6,19 +6,21 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import com.example.dilidiliactivity.data.local.PopularPreciousResponse.PopularPreciousResponse
-import com.example.dilidiliactivity.data.remote.ApiClient.RetrofitClient
+import com.example.dilidiliactivity.data.remote.api.BilibiliApi
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class VideoViewModel : ViewModel() {
+@HiltViewModel
+class VideoViewModel @Inject constructor(
+    private val api: BilibiliApi
+) : ViewModel() {
 
     private val _videoUrl = MutableStateFlow<String?>(null)
     val videoUrl: StateFlow<String?> = _videoUrl
 
-    private val api = RetrofitClient.instance
-
-    //获取PopularPrecious视频
     private var _preciousState = MutableStateFlow<PopularPreciousResponse?>(null)
     val preciousState: StateFlow<PopularPreciousResponse?> = _preciousState
 
@@ -35,11 +37,10 @@ class VideoViewModel : ViewModel() {
         }
     }
 
-    //获取视频的url
     fun fetchVideoUrl(cid: String, bvid: String) {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.instance.getPlayUrl(cid, bvid)
+                val response = api.getPlayUrl(cid, bvid)
                 if (response.isSuccessful) {
                     val playUrlResponse = response.body()
                     val url = playUrlResponse
@@ -49,11 +50,9 @@ class VideoViewModel : ViewModel() {
                         ?.url
                     _videoUrl.value = url
                 } else {
-                    // 处理 HTTP 错误
                     _videoUrl.value = null
                 }
             } catch (e: Exception) {
-                // 网络或解析异常
                 _videoUrl.value = null
             }
         }

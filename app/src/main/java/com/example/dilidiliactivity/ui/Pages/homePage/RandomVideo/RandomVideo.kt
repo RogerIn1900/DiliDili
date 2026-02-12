@@ -20,11 +20,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.dilidiliactivity.data.local.RandomVideoData.DynamicRegionResponse
 import com.example.dilidiliactivity.data.remote.ApiClient.ApiClient
 
 @Composable
-fun RandomVideo(randomVideo:RandomVideoViewModel = RandomVideoViewModel()) {
+fun RandomVideo(randomVideo:RandomVideoViewModel = hiltViewModel()) {
     val TAG = "RandomVideo"
     val uiState = randomVideo.uiState
     val aid = randomVideo.aid

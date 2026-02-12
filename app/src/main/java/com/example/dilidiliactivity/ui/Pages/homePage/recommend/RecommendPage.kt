@@ -28,6 +28,7 @@ import com.example.dilidiliactivity.data.local.RandomVideoData.DynamicRegionResp
 import coil.compose.rememberAsyncImagePainter
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.LaunchedEffect
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
 import com.example.dilidiliactivity.data.remote.ApiClient.ApiClient
 import com.example.dilidiliactivity.ui.Pages.homePage.RandomVideo.RandomVideoViewModel
@@ -47,7 +48,7 @@ fun RecommendPage() {
 fun BiliRegionScreen(
     ps: Int,
     rid: Int,
-    randomVideo: RandomVideoViewModel = RandomVideoViewModel()
+    randomVideo: RandomVideoViewModel = hiltViewModel()
 ) {
     val TAG = "BiliRegionScreen"
     val uiState = randomVideo.uiState

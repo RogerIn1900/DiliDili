@@ -8,24 +8,24 @@ import androidx.media3.common.util.UnstableApi
 import com.example.dilidiliactivity.data.local.PopularPreciousResponse.PopularPreciousResponse
 import com.example.dilidiliactivity.data.local.archive.ArchiveDao
 import com.example.dilidiliactivity.data.local.archive.toEntity
-import com.example.dilidiliactivity.data.remote.ApiClient.RetrofitClient
+import com.example.dilidiliactivity.data.remote.api.BilibiliApi
 import com.example.dilidiliactivity.data.local.archive.Archive
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlin.collections.forEach
+import javax.inject.Inject
 
-class PopularPreciousViewModel(
-    private val dao: ArchiveDao
+@HiltViewModel
+class PopularPreciousViewModel @Inject constructor(
+    private val dao: ArchiveDao,
+    private val api: BilibiliApi
 ): ViewModel() {
 
     val TAG = "PopularPreciousVM"
-    private val api = RetrofitClient.instance
-    //获取PopularPrecious视频
     private var _preciousState = MutableStateFlow<PopularPreciousResponse?>(null)
     val preciousState: StateFlow<PopularPreciousResponse?> = _preciousState
 
-    // 把 list 改成 StateFlow
     private val _list = MutableStateFlow<List<Archive>>(emptyList())
     val list: StateFlow<List<Archive>> = _list
 

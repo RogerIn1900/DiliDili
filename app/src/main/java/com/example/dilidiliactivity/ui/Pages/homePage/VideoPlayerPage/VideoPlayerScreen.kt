@@ -99,6 +99,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackParameters
@@ -114,7 +115,6 @@ import com.example.dilidiliactivity.data.local.ArchiveSingleton
 import com.example.dilidiliactivity.data.local.ArchiveSingleton.archive
 import com.example.dilidiliactivity.data.local.DetailsPageData.VideoInfo
 import com.example.dilidiliactivity.data.local.advertisement.AdvertisementData
-import com.example.dilidiliactivity.data.local.archive.AppDatabase
 import com.example.dilidiliactivity.data.mapper.toDisplayCount
 import com.example.dilidiliactivity.data.mapper.toUiModel
 import com.example.dilidiliactivity.data.mapper.toUserInfo
@@ -125,7 +125,6 @@ import com.example.dilidiliactivity.ui.Pages.homePage.AnimatePage.VideoUiState
 import com.example.dilidiliactivity.ui.Pages.homePage.RandomVideo.WebView
 import com.example.dilidiliactivity.ui.Pages.homePage.RelatedVideo.RelatedVideo
 import com.example.dilidiliactivity.ui.Pages.homePage.RelatedVideo.RelatedVideoViewModel
-import com.example.dilidiliactivity.ui.Pages.homePage.RelatedVideo.RelatedVideoViewModelFactory
 import com.example.dilidiliactivity.ui.common.animatePart.Coin
 import com.example.dilidiliactivity.ui.common.animatePart.DisLike
 import com.example.dilidiliactivity.ui.common.animatePart.Like
@@ -148,15 +147,12 @@ import kotlin.math.roundToInt
 fun VideoPlayerScreen(
     rootNavController: NavController,
     videoId: String,
-    repository: VideoRepository,
     onBack: () -> Unit,
     onExpand: () -> Unit,
-    relatedVideoVM: RelatedVideoViewModel = viewModel (
-        factory = RelatedVideoViewModelFactory(
-            repo = VideoRepository(AppDatabase.getInstance(LocalContext.current).archiveDao())
-        )
-    )
+    playerViewModel: VideoPlayerViewModel = hiltViewModel(),
+    relatedVideoVM: RelatedVideoViewModel = hiltViewModel()
 ) {
+    val repository = playerViewModel.repository
     val TAG = "VideoPlayerScreen"
     //视频数据加载
     // 本地懒加载数据作为占位
@@ -893,7 +889,7 @@ fun AdvertisementPart(advertisement: AdvertisementData) {
 @Composable
 fun PopularPreciousPageInLazyColumn(
     rootNavController: NavController,
-    viewModel: VideoViewModel = viewModel(),
+    viewModel: VideoViewModel = hiltViewModel(),
     onVideoClick: (Archive) -> Unit = { archive ->
         rootNavController.navigate("player/${archive.bvid}")
     }

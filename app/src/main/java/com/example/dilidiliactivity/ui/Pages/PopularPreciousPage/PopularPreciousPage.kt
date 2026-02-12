@@ -11,26 +11,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
-import com.example.dilidiliactivity.data.local.archive.AppDatabase
-import com.example.dilidiliactivity.domain.repository.VideoRepository
 import com.example.dilidiliactivity.ui.Pages.homePage.AnimatePage.VideoListScreen
-import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoViewModel
 
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun PopularPreciousPage(
     rootNavController: NavController,
-    viewModel: PopularPreciousViewModel = viewModel(
-        factory = PopularPreciousViewModelFactory(
-            AppDatabase.getInstance(LocalContext.current).archiveDao()
-        )
-    )
+    viewModel: PopularPreciousViewModel = hiltViewModel()
 ) {
     val state by viewModel.preciousState.collectAsState()
     val list by viewModel.list.collectAsState()
