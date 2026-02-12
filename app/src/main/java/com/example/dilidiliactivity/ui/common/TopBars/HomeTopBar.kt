@@ -53,8 +53,6 @@ import com.example.dilidiliactivity.R
 import com.example.dilidiliactivity.ui.Pages.homePage.AnimatePage.AnimatePage
 import com.example.dilidiliactivity.ui.Pages.homePage.RandomVideo.RandomVideo
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.SharedVideoViewModel
-import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VerticalPagerExample
-import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoIntro
 import kotlinx.coroutines.launch
 
 
