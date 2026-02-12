@@ -13,7 +13,7 @@ package com.example.dilidiliactivity.ui.navigation
 sealed class Screen( val route: String,val  destination: String) {
     object LoginPage : Screen(route = "LoginPage",destination = "登陆")
     object HomePage : Screen(route = "HomePage",destination = "首页")
-    object FrendsPage : Screen(route = "FrendsPage",destination = "朋友")
+    object FriendsPage : Screen(route = "FriendsPage",destination = "朋友")
     object PublishPage : Screen(route = "PublishPage",destination = "发布")
     object MessagePage : Screen(route = "MessagePage",destination = "消息")
     object MinePage : Screen(route = "MinePage",destination = "我的")

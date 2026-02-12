@@ -6,12 +6,12 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dilidiliactivity.data.remote.ApiClient.PopularVideoApiClient
-import com.example.dilidiliactivity.data.local.PopularVideoData.PopularVidelData
+import com.example.dilidiliactivity.data.local.PopularVideoData.PopularVideoData
 import com.example.dilidiliactivity.data.local.PopularVideoData.ShowInfo
 import kotlinx.coroutines.launch
 
 class PopularVideoViewModel : ViewModel(){
-    var uiState by mutableStateOf<PopularVidelData?>(null)
+    var uiState by mutableStateOf<PopularVideoData?>(null)
     var idList by mutableStateOf<List<Pair<String, String>>>(emptyList())
     //视频播放地址列表
     var urlList by mutableStateOf<List<String>>(emptyList())

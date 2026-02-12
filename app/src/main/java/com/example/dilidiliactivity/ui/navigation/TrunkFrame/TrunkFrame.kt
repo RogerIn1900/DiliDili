@@ -1,4 +1,4 @@
-package com.example.dilidiliactivity.ui.navigation.TrunckFrame
+package com.example.dilidiliactivity.ui.navigation.TrunkFrame
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
@@ -11,7 +11,7 @@ import com.example.dilidiliactivity.ui.navigation.RootNavHost
 
 @Composable
 
-fun TrunckFrame() {
+fun TrunkFrame() {
     val navHostController: NavHostController = rememberNavController()
     Surface(
         modifier = Modifier.fillMaxSize()

@@ -1,4 +1,4 @@
-package com.example.dilidiliactivity.ui.navigation.TrunckFrame
+package com.example.dilidiliactivity.ui.navigation.TrunkFrame
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize

@@ -15,7 +15,7 @@ import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.SharedVide
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoPlayerScreen
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoPlayerScreen2
 import com.example.dilidiliactivity.ui.Pages.minePage.FullScreenPage
-import com.example.dilidiliactivity.ui.navigation.TrunckFrame.MainFrame
+import com.example.dilidiliactivity.ui.navigation.TrunkFrame.MainFrame
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -30,16 +30,16 @@ fun RootNavHost(navHostController: NavHostController,
 
     AnimatedNavHost(
         navController = rootNavController,
-        startDestination = TrunckScreen.MainFrame.route
+        startDestination = TrunkScreen.MainFrame.route
     ) {
         // 原底部导航栏页面
-        composable( TrunckScreen.MainFrame.route) {
+        composable( TrunkScreen.MainFrame.route) {
             MainFrame( navHostController,paddingValues = paddingValues,rootNavController = rootNavController,sharedVm)
         }
 
         // 全屏覆盖页面
         composable(
-            TrunckScreen.FullScreenPage.route,
+            TrunkScreen.FullScreenPage.route,
             enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
             exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) },
             popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
@@ -82,7 +82,7 @@ fun RootNavHost(navHostController: NavHostController,
                     rootNavController.popBackStack()
                 },
                 onExpand = {
-                    rootNavController.navigate(TrunckScreen.FullScreenPage.route)
+                    rootNavController.navigate(TrunkScreen.FullScreenPage.route)
                 }
             )
         }
@@ -109,7 +109,7 @@ fun RootNavHost(navHostController: NavHostController,
                     rootNavController.popBackStack()
                 },
                 onExpand = {
-                    rootNavController.navigate(TrunckScreen.FullScreenPage.route)
+                    rootNavController.navigate(TrunkScreen.FullScreenPage.route)
                 }
             )
         }

@@ -6,7 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.dilidiliactivity.ui.Pages.PublishPage.PublishPage
-import com.example.dilidiliactivity.ui.Pages.frendsPage.FrendsPage
+import com.example.dilidiliactivity.ui.Pages.friendsPage.FriendsPage
 import com.example.dilidiliactivity.ui.Pages.homePage.HomePage
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.SharedVideoViewModel
 import com.example.dilidiliactivity.ui.Pages.messagePage.MessagePage
@@ -24,8 +24,8 @@ fun NavigationGraph(navHostController: NavHostController,
         composable(route = Screen.HomePage.route){
             HomePage(paddingValues,sharedVm, rootNavController)
         }
-        composable(route = Screen.FrendsPage.route){
-            FrendsPage(paddingValues)
+        composable(route = Screen.FriendsPage.route){
+            FriendsPage(paddingValues)
         }
         composable(route = Screen.PublishPage.route){
             PublishPage(paddingValues)

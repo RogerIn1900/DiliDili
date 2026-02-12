@@ -1,4 +1,4 @@
-package com.example.dilidiliactivity.ui.Pages.frendsPage
+package com.example.dilidiliactivity.ui.Pages.friendsPage
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,7 +16,7 @@ import com.example.dilidiliactivity.data.local.HomePageData.TabItem
 import kotlinx.coroutines.launch
 
 @Composable
-fun FrendsPage(paddingValues: PaddingValues) {
+fun FriendsPage(paddingValues: PaddingValues) {
 
     val tabItems = listOf(
         TabItem(title = "添加"),

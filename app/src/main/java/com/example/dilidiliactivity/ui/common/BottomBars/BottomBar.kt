@@ -44,7 +44,7 @@ fun BottomBar(navHostController: NavController, modifier: Modifier) {
         mutableStateOf(Color.Black)
     }
 
-//    color = if (currentRoute == Screen.HomePage.route || currentRoute == Screen.FrendsPage.route) Color.Black else Color.White
+//    color = if (currentRoute == Screen.HomePage.route || currentRoute == Screen.FriendsPage.route) Color.Black else Color.White
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -71,7 +71,7 @@ fun BottomBar(navHostController: NavController, modifier: Modifier) {
                 .align(Alignment.CenterVertically)
                 .noRippleClickable {
                     selectedIndex = 2
-                    navHostController.navigate(Screen.FrendsPage.route)
+                    navHostController.navigate(Screen.FriendsPage.route)
                 },
             selected = selectedIndex == 2,
             color = if (color == Color.Black) Color.White else Color.Black,
