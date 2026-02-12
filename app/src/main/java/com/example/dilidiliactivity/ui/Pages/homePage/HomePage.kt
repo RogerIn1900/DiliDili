@@ -52,9 +52,6 @@ import com.example.dilidiliactivity.ui.Pages.homePage.AnimatePage.AnimatePage
 import com.example.dilidiliactivity.ui.Pages.homePage.RandomVideo.RandomVideo
 import com.example.dilidiliactivity.ui.Pages.homePage.RelatedVideo.RelatedVideo
 import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.SharedVideoViewModel
-import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VerticalPagerExample
-import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoIntro
-import com.example.dilidiliactivity.ui.Pages.homePage.VideoPlayerPage.VideoViewModel
 import com.example.dilidiliactivity.ui.Pages.homePage.YingShiPage.YingShiPage
 import com.example.dilidiliactivity.ui.Pages.homePage.ZuixinPage.ZuixinPage
 import com.example.dilidiliactivity.ui.common.TopBars.HomeTopBar
