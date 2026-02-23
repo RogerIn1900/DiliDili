@@ -49,6 +49,8 @@ import com.example.dilidiliactivity.ui.pages.popularpreciouspage.PopularPrecious
 import com.example.dilidiliactivity.ui.pages.homepage.animatepage.AnimatePage
 import com.example.dilidiliactivity.ui.pages.homepage.randomvideo.RandomVideo
 import com.example.dilidiliactivity.ui.pages.homepage.relatedvideo.RelatedVideo
+import com.example.dilidiliactivity.anr.AnrMonitor
+import com.example.dilidiliactivity.anr.AnrStage
 import com.example.dilidiliactivity.ui.pages.homepage.videoplayerpage.SharedVideoViewModel
 import com.example.dilidiliactivity.ui.pages.homepage.yingshipage.YingShiPage
 import com.example.dilidiliactivity.ui.pages.homepage.zuixinpage.ZuixinPage
@@ -149,6 +151,7 @@ fun CollapsingHeaderScreen(paddingValues: PaddingValues, sharedVm: SharedVideoVi
         tabs.size // 页数
     }
     val coroutineScope = rememberCoroutineScope()
+    AnrMonitor.setStage(AnrStage.UI_SCROLL)
 
     LazyColumn (
         modifier = Modifier.padding(paddingValues)

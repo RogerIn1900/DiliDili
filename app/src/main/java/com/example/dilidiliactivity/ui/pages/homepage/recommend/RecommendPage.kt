@@ -25,6 +25,8 @@ import coil.compose.rememberAsyncImagePainter
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.util.UnstableApi
+import com.example.dilidiliactivity.anr.AnrMonitor
+import com.example.dilidiliactivity.anr.AnrStage
 import com.example.dilidiliactivity.ui.pages.homepage.randomvideo.RandomVideoViewModel
 import timber.log.Timber
 import com.example.dilidiliactivity.ui.pages.homepage.randomvideo.WebView
@@ -64,6 +66,7 @@ fun BiliRegionScreen(
             Text("加载中...")
         }
     } else {
+        AnrMonitor.setStage(AnrStage.IMAGE_LOAD)
         LazyColumn(modifier = Modifier.padding(16.dp)) {
             item {
                 val archives = uiState.data.archives

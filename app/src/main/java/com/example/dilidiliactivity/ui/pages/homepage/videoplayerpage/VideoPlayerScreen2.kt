@@ -65,6 +65,8 @@ import com.example.dilidiliactivity.domain.repository.VideoRepository
 import com.example.dilidiliactivity.ui.navigation.Routes
 import com.example.dilidiliactivity.ui.pages.homepage.animatepage.VideoUiState
 import com.example.dilidiliactivity.ui.pages.homepage.relatedvideo.RelatedVideoViewModel
+import com.example.dilidiliactivity.anr.AnrMonitor
+import com.example.dilidiliactivity.anr.AnrStage
 import com.example.dilidiliactivity.ui.pages.homepage.videoplayerpage.PlayerControlStyle
 import com.example.dilidiliactivity.R
 import kotlinx.coroutines.launch
@@ -83,6 +85,7 @@ fun VideoPlayerScreen2(
     playerViewModel: VideoPlayerViewModel = hiltViewModel(),
     relatedVideoVM: RelatedVideoViewModel = hiltViewModel()
 ) {
+    AnrMonitor.setStage(AnrStage.VIDEO_PLAY)
     val repository = playerViewModel.repository
     val TAG = "VideoPlayerScreen2"
     var currentArchive by remember { mutableStateOf(ArchiveSingleton.archive) }

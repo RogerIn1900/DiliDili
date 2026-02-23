@@ -9,6 +9,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.dilidiliactivity.anr.AnrMonitor
+import com.example.dilidiliactivity.anr.AnrStage
 import com.example.dilidiliactivity.ui.pages.homepage.videoplayerpage.SharedVideoViewModel
 import com.example.dilidiliactivity.ui.pages.homepage.videoplayerpage.VideoPlayerScreen
 import com.example.dilidiliactivity.ui.pages.homepage.videoplayerpage.VideoPlayerScreen2
@@ -31,6 +33,7 @@ fun RootNavHost(navHostController: NavHostController,
         startDestination = TrunkScreen.MainFrame.route
     ) {
         composable( TrunkScreen.MainFrame.route) {
+            AnrMonitor.setStage(AnrStage.NAVIGATION)
             MainFrame( navHostController,paddingValues = paddingValues,rootNavController = rootNavController,sharedVm)
         }
 
@@ -41,6 +44,7 @@ fun RootNavHost(navHostController: NavHostController,
             popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
             popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) }
         ) {
+            AnrMonitor.setStage(AnrStage.NAVIGATION)
             FullScreenPage(rootNavController)
         }
 
@@ -51,6 +55,7 @@ fun RootNavHost(navHostController: NavHostController,
             popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
             popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) }
         ) { backStackEntry ->
+            AnrMonitor.setStage(AnrStage.NAVIGATION)
             val videoId = backStackEntry.arguments?.getString("videoId") ?: ""
 
             VideoPlayerScreen(
@@ -72,6 +77,7 @@ fun RootNavHost(navHostController: NavHostController,
             popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
             popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) }
         ) { backStackEntry ->
+            AnrMonitor.setStage(AnrStage.NAVIGATION)
             val videoId = backStackEntry.arguments?.getString("videoId") ?: ""
 
             VideoPlayerScreen2(
