@@ -132,8 +132,10 @@ fun YingShiPage(modifier: Modifier = Modifier) {
 		}
 
 	val exoPlayer = remember(context) {
+		val start = System.currentTimeMillis()
 		ExoPlayer.Builder(context).build().apply {
 			playWhenReady = true
+			Timber.d("[Warmup-Baseline] ExoPlayer.Builder.build (YingShiPage): %dms", System.currentTimeMillis() - start)
 		}
 	}
 

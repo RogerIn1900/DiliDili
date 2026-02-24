@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -36,12 +37,16 @@ class AnimateVideoViewModel @Inject constructor(
     fun loadVideos(ps: Int = 10, rid: Int = 1) {
         viewModelScope.launch {
             _uiState.value = VideoUiState.Loading
+            val start = System.currentTimeMillis()
             try {
                 val archives = repo.getVideoList(ps, rid)
+                val cost = System.currentTimeMillis() - start
+                Timber.d("[Warmup-Baseline] AnimateVideoVM.loadVideos (network+db): %dms, count=%d", cost, archives.size)
                 // 初始加载时，直接设置列表
                 _allArchives.value = archives
                 _uiState.value = VideoUiState.Success(_allArchives.value)
             } catch (e: Exception) {
+                Timber.d("[Warmup-Baseline] AnimateVideoVM.loadVideos failed after %dms", System.currentTimeMillis() - start)
                 _uiState.value = VideoUiState.Error("加载失败: ${e.message}")
             }
         }

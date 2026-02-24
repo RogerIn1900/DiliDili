@@ -15,6 +15,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -27,6 +28,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
+        val start = System.currentTimeMillis()
         val logging = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BASIC
         }
@@ -35,27 +37,41 @@ object AppModule {
             .readTimeout(15, TimeUnit.SECONDS)
             .writeTimeout(15, TimeUnit.SECONDS)
             .addInterceptor(logging)
-            .build()
+            .build().also {
+                Timber.d("[Warmup-Baseline] OkHttpClient build: %dms", System.currentTimeMillis() - start)
+            }
     }
 
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit =
-        Retrofit.Builder()
+    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        val start = System.currentTimeMillis()
+        return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
-            .build()
+            .build().also {
+                Timber.d("[Warmup-Baseline] Retrofit build: %dms", System.currentTimeMillis() - start)
+            }
+    }
 
     @Provides
     @Singleton
-    fun provideBilibiliApi(retrofit: Retrofit): BilibiliApi =
-        retrofit.create(BilibiliApi::class.java)
+    fun provideBilibiliApi(retrofit: Retrofit): BilibiliApi {
+        val start = System.currentTimeMillis()
+        return retrofit.create(BilibiliApi::class.java).also {
+            Timber.d("[Warmup-Baseline] BilibiliApi proxy create: %dms", System.currentTimeMillis() - start)
+        }
+    }
 
     @Provides
     @Singleton
-    fun providePopularVideoApi(retrofit: Retrofit): PopularVideoApi =
-        retrofit.create(PopularVideoApi::class.java)
+    fun providePopularVideoApi(retrofit: Retrofit): PopularVideoApi {
+        val start = System.currentTimeMillis()
+        return retrofit.create(PopularVideoApi::class.java).also {
+            Timber.d("[Warmup-Baseline] PopularVideoApi proxy create: %dms", System.currentTimeMillis() - start)
+        }
+    }
 
     @Provides
     @Singleton

@@ -24,8 +24,11 @@ class PopularVideoViewModel @Inject constructor(
 
     fun loadPopularVideo(){
         viewModelScope.launch {
+            val start = System.currentTimeMillis()
             try {
                 uiState = api.getPopularVideo()
+                val networkCost = System.currentTimeMillis() - start
+                Timber.d("[Warmup-Baseline] PopularVideoVM.loadPopularVideo network: %dms", networkCost)
 
                 idList = uiState!!.data.list.map { Pair(it.aid.toString(), it.cid.toString()) }
                 urlList = idList.map { "https://player.bilibili.com/player.html?aid=${it.first}&cid=${it.second}&page=1" }
@@ -42,6 +45,7 @@ class PopularVideoViewModel @Inject constructor(
                         pubdate = video.pubdate
                     )
                 }
+                Timber.d("[Warmup-Baseline] PopularVideoVM.loadPopularVideo total: %dms", System.currentTimeMillis() - start)
             } catch (e: Exception) {
                 Timber.e(e, "加载热门视频失败")
             }

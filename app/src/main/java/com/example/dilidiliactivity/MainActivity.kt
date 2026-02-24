@@ -11,10 +11,14 @@ import androidx.compose.runtime.setValue
 import com.example.dilidiliactivity.data.local.ArchiveSingleton
 import com.example.dilidiliactivity.ui.navigation.trunkframe.TrunkFrame
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        val activityStart = System.currentTimeMillis()
+        val sinceAppCreate = activityStart - DiliDiliApp.appCreateTimestamp
+        Timber.d("[Warmup-Baseline] MainActivity.onCreate start (since Application.onCreate: %dms)", sinceAppCreate)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
@@ -99,6 +103,7 @@ class MainActivity : ComponentActivity() {
 //        ArchiveSingleton.setArchiveFromJson(jsonString)
 
 
+        Timber.d("[Warmup-Baseline] MainActivity before setContent: %dms", System.currentTimeMillis() - activityStart)
         setContent {
             var currentScreen by remember { mutableStateOf("splash") }
 
@@ -114,6 +119,9 @@ class MainActivity : ComponentActivity() {
 //            }
             TrunkFrame()
         }
+        Timber.d("[Warmup-Baseline] MainActivity.onCreate done: %dms (total since app: %dms)",
+            System.currentTimeMillis() - activityStart,
+            System.currentTimeMillis() - DiliDiliApp.appCreateTimestamp)
     }
 }
 

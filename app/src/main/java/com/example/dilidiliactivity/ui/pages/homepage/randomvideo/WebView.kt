@@ -21,6 +21,7 @@ fun WebView(url: String) {
 
     AndroidView(
         factory = { context ->
+            val webViewStart = System.currentTimeMillis()
             WebView(context).apply {
                 layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -46,6 +47,9 @@ fun WebView(url: String) {
                 }
 
                 webChromeClient = WebChromeClient()
+
+                val webViewCost = System.currentTimeMillis() - webViewStart
+                Timber.d("[Warmup-Baseline] WebView create + configure: %dms", webViewCost)
 
                 loadUrl(url)
             }

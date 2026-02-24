@@ -6,8 +6,16 @@ import timber.log.Timber
 
 @HiltAndroidApp
 class DiliDiliApp : Application() {
+
+    companion object {
+        /** Application.onCreate 开始的时间戳，供后续打点计算相对耗时 */
+        var appCreateTimestamp: Long = 0L
+    }
+
     override fun onCreate() {
+        appCreateTimestamp = System.currentTimeMillis()
         super.onCreate()
         Timber.plant(Timber.DebugTree())
+        Timber.d("[Warmup-Baseline] Application.onCreate done: %dms", System.currentTimeMillis() - appCreateTimestamp)
     }
 }

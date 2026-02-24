@@ -14,6 +14,7 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.ui.PlayerView
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.source.MergingMediaSource
+import timber.log.Timber
 
 @UnstableApi
 @Composable
@@ -25,7 +26,11 @@ fun Media3Player(
 ) {
     // 创建 ExoPlayer
     val player = remember {
+        val start = System.currentTimeMillis()
         ExoPlayer.Builder(context).build().apply {
+            val buildCost = System.currentTimeMillis() - start
+            Timber.d("[Warmup-Baseline] ExoPlayer.Builder.build (Media3Player): %dms", buildCost)
+
             val dataSourceFactory = DefaultDataSource.Factory(context)
 
             val videoSource = ProgressiveMediaSource.Factory(dataSourceFactory)
@@ -37,6 +42,8 @@ fun Media3Player(
 
             setMediaSource(mergedSource)
             prepare()
+            val totalCost = System.currentTimeMillis() - start
+            Timber.d("[Warmup-Baseline] ExoPlayer build+prepare (Media3Player): %dms", totalCost)
             playWhenReady = true
         }
     }
@@ -60,7 +67,11 @@ fun Media3Player(
 fun DashPlayer(videoUrl: String, audioUrl: String) {
     val context = LocalContext.current
     val player = remember {
+        val start = System.currentTimeMillis()
         ExoPlayer.Builder(context).build().apply {
+            val buildCost = System.currentTimeMillis() - start
+            Timber.d("[Warmup-Baseline] ExoPlayer.Builder.build (DashPlayer): %dms", buildCost)
+
             val videoSource = ProgressiveMediaSource.Factory(DefaultDataSource.Factory(context))
                 .createMediaSource(MediaItem.fromUri(videoUrl))
             val audioSource = ProgressiveMediaSource.Factory(DefaultDataSource.Factory(context))
@@ -69,6 +80,8 @@ fun DashPlayer(videoUrl: String, audioUrl: String) {
             val mergedSource = MergingMediaSource(videoSource, audioSource)
             setMediaSource(mergedSource)
             prepare()
+            val totalCost = System.currentTimeMillis() - start
+            Timber.d("[Warmup-Baseline] ExoPlayer build+prepare (DashPlayer): %dms", totalCost)
             playWhenReady = true
         }
     }
