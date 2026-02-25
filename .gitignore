@@ -14,3 +14,7 @@
 .cxx
 local.properties
 .history/
+.claude/
+/.idea/.name
+/.idea/markdown.xml
+/.idea/misc.xml
