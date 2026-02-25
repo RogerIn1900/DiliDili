@@ -1,7 +1,7 @@
 package com.example.dilidiliactivity
 
 import android.app.Application
-import com.example.dilidiliactivity.warmup.WebViewWarmup
+import com.example.dilidiliactivity.warmup.AppWarmup
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 
@@ -19,7 +19,7 @@ class DiliDiliApp : Application() {
         Timber.plant(Timber.DebugTree())
         Timber.d("[Warmup-Baseline] Application.onCreate done: %dms", System.currentTimeMillis() - appCreateTimestamp)
 
-        // P0: WebView 引擎预热（post 到主线程队列，不阻塞 onCreate）
-        WebViewWarmup.warmup(this)
+        // 启动所有预热任务（WebView、ExoPlayer、Room、网络层、Gson、首页数据预取）
+        AppWarmup.start(this)
     }
 }

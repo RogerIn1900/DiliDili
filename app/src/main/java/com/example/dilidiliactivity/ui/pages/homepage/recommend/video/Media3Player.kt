@@ -14,6 +14,7 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.ui.PlayerView
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.source.MergingMediaSource
+import com.example.dilidiliactivity.warmup.ExoPlayerPool
 import timber.log.Timber
 
 @UnstableApi
@@ -27,7 +28,7 @@ fun Media3Player(
     // 创建 ExoPlayer
     val player = remember {
         val start = System.currentTimeMillis()
-        ExoPlayer.Builder(context).build().apply {
+        ExoPlayerPool.acquire(context).apply {
             val buildCost = System.currentTimeMillis() - start
             Timber.d("[Warmup-Baseline] ExoPlayer.Builder.build (Media3Player): %dms", buildCost)
 
@@ -68,7 +69,7 @@ fun DashPlayer(videoUrl: String, audioUrl: String) {
     val context = LocalContext.current
     val player = remember {
         val start = System.currentTimeMillis()
-        ExoPlayer.Builder(context).build().apply {
+        ExoPlayerPool.acquire(context).apply {
             val buildCost = System.currentTimeMillis() - start
             Timber.d("[Warmup-Baseline] ExoPlayer.Builder.build (DashPlayer): %dms", buildCost)
 

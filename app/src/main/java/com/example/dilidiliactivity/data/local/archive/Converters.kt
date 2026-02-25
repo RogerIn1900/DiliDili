@@ -1,11 +1,12 @@
 package com.example.dilidiliactivity.data.local.archive
 
 import androidx.room.TypeConverter
+import com.example.dilidiliactivity.warmup.GsonWarmup
 import com.google.gson.Gson
 import timber.log.Timber
 
 class Converters {
-    private val gson = Gson()
+    private val gson: Gson = GsonWarmup.sharedGson
 
     // 记录每个类型首次反序列化的耗时
     private val firstDeserialize = mutableSetOf<String>()

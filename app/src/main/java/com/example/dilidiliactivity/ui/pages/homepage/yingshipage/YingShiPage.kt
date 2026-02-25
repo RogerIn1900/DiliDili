@@ -63,6 +63,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.ui.PlayerView
 import com.example.dilidiliactivity.R
+import com.example.dilidiliactivity.warmup.ExoPlayerPool
 import com.example.dilidiliactivity.ui.pages.homepage.videoplayerpage.PlayerControlStyle
 import com.example.dilidiliactivity.ui.pages.homepage.videoplayerpage.VideoPlayerWithCustomTopBar
 import kotlinx.coroutines.launch
@@ -133,7 +134,7 @@ fun YingShiPage(modifier: Modifier = Modifier) {
 
 	val exoPlayer = remember(context) {
 		val start = System.currentTimeMillis()
-		ExoPlayer.Builder(context).build().apply {
+		ExoPlayerPool.acquire(context).apply {
 			playWhenReady = true
 			Timber.d("[Warmup-Baseline] ExoPlayer.Builder.build (YingShiPage): %dms", System.currentTimeMillis() - start)
 		}
