@@ -39,4 +39,25 @@ class PlaybackLifecycleTest {
         compose.waitUntil(10_000) { model().session.engine.value != null }
         compose.onNodeWithTag("demo_player").assertExists()
     }
+    @Test fun backgroundStopReleasesAndResumeRestoresPausedPosition() {
+        compose.onNodeWithTag("demo_item_0").performClick()
+        compose.waitUntil(10_000) { model().session.engine.value != null }
+        compose.runOnIdle {
+            val engine = model().session.engine.value as Media3PlaybackEngine
+            engine.player.pause()
+            engine.player.seekTo(1_500L)
+        }
+        compose.activityRule.scenario.moveToState(Lifecycle.State.CREATED)
+        compose.activityRule.scenario.onActivity { activity ->
+            assertNull(ViewModelProvider(activity)[LocalPlaybackViewModel::class.java].session.engine.value)
+        }
+        compose.activityRule.scenario.moveToState(Lifecycle.State.RESUMED)
+        compose.waitUntil(10_000) { model().session.engine.value != null }
+        compose.runOnIdle {
+            val engine = model().session.engine.value as Media3PlaybackEngine
+            assertFalse(engine.playRequested)
+            assertTrue(engine.positionMs >= 1_500L)
+        }
+    }
+
 }

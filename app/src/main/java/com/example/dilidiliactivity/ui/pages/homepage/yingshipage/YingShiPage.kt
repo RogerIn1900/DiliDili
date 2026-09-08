@@ -66,6 +66,11 @@ import com.example.dilidiliactivity.R
 import com.example.dilidiliactivity.ui.pages.homepage.videoplayerpage.PlayerControlStyle
 import com.example.dilidiliactivity.ui.pages.homepage.videoplayerpage.VideoPlayerWithCustomTopBar
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.collectAsState
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.dilidiliactivity.ui.playback.LocalPlaybackViewModel
+import com.example.dilidiliactivity.ui.playback.Media3PlaybackEngine
+import com.example.dilidiliactivity.ui.playback.PlaybackLifecycle
 
 
 private const val TAG = "YingShiPage"
@@ -74,7 +79,7 @@ private const val TAG = "YingShiPage"
 @OptIn(UnstableApi::class)
 @kotlin.OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-fun YingShiPage(modifier: Modifier = Modifier) {
+fun YingShiPage(modifier: Modifier = Modifier, playback: LocalPlaybackViewModel = hiltViewModel()) {
 
 	val context = LocalContext.current
 	val activity = remember { context.findActivity() }
@@ -90,8 +95,8 @@ fun YingShiPage(modifier: Modifier = Modifier) {
 		)
 	}
 
-	var selectedVideoUri by remember { mutableStateOf<Uri?>(rawVideos.firstOrNull()?.uri) }
-	var selectedVideoLabel by remember { mutableStateOf(rawVideos.firstOrNull()?.label ?: "请选择视频") }
+	var selectedVideoUri by rememberSaveable { mutableStateOf<Uri?>(rawVideos.firstOrNull()?.uri) }
+	var selectedVideoLabel by rememberSaveable { mutableStateOf(rawVideos.firstOrNull()?.label ?: "请选择视频") }
 	var pickerError by remember { mutableStateOf<String?>(null) }
 	val localVideos = remember { mutableStateListOf<LocalVideoItem>() }
 	val tabs = remember { listOf("内置视频", "本地视频") }
@@ -132,17 +137,10 @@ fun YingShiPage(modifier: Modifier = Modifier) {
 			}
 		}
 
-	val exoPlayer = remember(context) {
-		ExoPlayer.Builder(context).build().apply {
-			playWhenReady = true
-		}
-	}
-
-	DisposableEffect(exoPlayer) {
-		onDispose {
-			exoPlayer.release()
-		}
-	}
+	PlaybackLifecycle(playback.session)
+	val engine by playback.session.engine.collectAsState()
+	val exoPlayer = (engine as? Media3PlaybackEngine)?.player
+	val playbackError by playback.error.collectAsState()
 
 	DisposableEffect(exoPlayer) {
 		val listener = object : Player.Listener {
@@ -163,22 +161,14 @@ fun YingShiPage(modifier: Modifier = Modifier) {
 				}
 			}
 		}
-		exoPlayer.addListener(listener)
+		exoPlayer?.addListener(listener)
 		onDispose {
-			exoPlayer.removeListener(listener)
+			exoPlayer?.removeListener(listener)
 		}
 	}
 
 	LaunchedEffect(selectedVideoUri) {
-		val uri = selectedVideoUri
-		if (uri != null) {
-			Timber.d( "加载视频：$uri")
-			exoPlayer.setMediaItem(MediaItem.fromUri(uri))
-			exoPlayer.prepare()
-		} else {
-			exoPlayer.stop()
-			exoPlayer.clearMediaItems()
-		}
+		selectedVideoUri?.let { playback.select(it.toString()) }
 	}
 
 	LaunchedEffect(isFullScreen, videoAspectRatio) {
@@ -222,7 +212,7 @@ fun YingShiPage(modifier: Modifier = Modifier) {
 								text = "请选择要播放的视频文件",
 								color = Color.White
 							)
-						} else if (!isFullScreen) {
+						} else if (!isFullScreen && exoPlayer != null) {
 							VideoPlayerWithCustomTopBar(
 								exoPlayer = exoPlayer,
 								onBack = {},
@@ -251,6 +241,7 @@ fun YingShiPage(modifier: Modifier = Modifier) {
 							openDocumentLauncher.launch(arrayOf("video/*"))
 						}
 					)
+					playbackError?.let { Text(it, color = Color.White) }
 					if (pickerError != null) {
 						Text(
 							text = pickerError ?: "",
@@ -328,7 +319,7 @@ fun YingShiPage(modifier: Modifier = Modifier) {
 			}
 		}
 
-		if (isFullScreen && selectedVideoUri != null) {
+		if (isFullScreen && selectedVideoUri != null && exoPlayer != null) {
 			FullscreenVideoDialog(
 				exoPlayer = exoPlayer,
 				onDismiss = { isFullScreen = false }
