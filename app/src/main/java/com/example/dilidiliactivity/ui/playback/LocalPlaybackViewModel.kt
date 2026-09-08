@@ -39,14 +39,22 @@ class SavedPlaybackBookmark(private val state: SavedStateHandle) : BookmarkStore
 }
 
 class Media3PlaybackEngine(context: Context, onError: (String) -> Unit) : PlaybackEngine {
+    private var prepareStartedMs: Long? = null
     val player: ExoPlayer = ExoPlayer.Builder(context).build().apply {
         addListener(object : Player.Listener {
+            override fun onRenderedFirstFrame() {
+                prepareStartedMs?.let { started ->
+                    android.util.Log.i("PlaybackMetrics", "first_frame_ms=${android.os.SystemClock.elapsedRealtime() - started}")
+                    prepareStartedMs = null
+                }
+            }
             override fun onPlayerError(error: PlaybackException) = onError(error.errorCodeName)
         })
     }
     override val positionMs: Long get() = player.currentPosition
     override val playRequested: Boolean get() = player.playWhenReady
     override fun prepare(uri: String, positionMs: Long, play: Boolean) {
+        prepareStartedMs = android.os.SystemClock.elapsedRealtime()
         player.setMediaItem(MediaItem.fromUri(uri), positionMs)
         player.playWhenReady = play
         player.prepare()

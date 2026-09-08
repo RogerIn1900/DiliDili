@@ -21,4 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "DiliDiliActivity"
 include(":app")
- 
+
+include(":benchmark")
