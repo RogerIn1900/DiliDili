@@ -72,6 +72,7 @@ private const val TAG = "YingShiPage"
 
 
 @OptIn(UnstableApi::class)
+@kotlin.OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun YingShiPage(modifier: Modifier = Modifier) {
 

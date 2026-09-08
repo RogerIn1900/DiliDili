@@ -148,6 +148,7 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 @OptIn(UnstableApi::class)
+@kotlin.OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun VideoPlayerScreen(
     rootNavController: NavController,

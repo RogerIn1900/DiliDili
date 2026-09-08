@@ -80,6 +80,7 @@ import android.content.Context
 import android.content.ContextWrapper
 
 @OptIn(UnstableApi::class)
+@kotlin.OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun VideoPlayerScreen2(
     rootNavController: NavController,
