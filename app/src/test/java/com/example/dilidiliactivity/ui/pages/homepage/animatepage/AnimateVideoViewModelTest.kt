@@ -1,99 +1,53 @@
 package com.example.dilidiliactivity.ui.pages.homepage.animatepage
 
-import app.cash.turbine.test
-import com.example.dilidiliactivity.data.local.archive.Archive
-import com.example.dilidiliactivity.data.local.archive.Dimension
-import com.example.dilidiliactivity.data.local.archive.Owner
-import com.example.dilidiliactivity.data.local.archive.Rights
-import com.example.dilidiliactivity.data.local.archive.Stat
+import com.example.dilidiliactivity.data.local.archive.*
 import com.example.dilidiliactivity.domain.repository.VideoRepository
-import io.mockk.coEvery
-import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
+import io.mockk.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.*
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AnimateVideoViewModelTest {
-
+    private val dispatcher = StandardTestDispatcher()
     private lateinit var repo: VideoRepository
     private lateinit var vm: AnimateVideoViewModel
-    private val testDispatcher = UnconfinedTestDispatcher()
-
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(testDispatcher)
+    private val rows = MutableStateFlow<List<Archive>>(emptyList())
+    @Before fun setUp() {
+        Dispatchers.setMain(dispatcher)
         repo = mockk()
+        every { repo.observeRegion(1) } returns rows
         vm = AnimateVideoViewModel(repo)
     }
+    @After fun tearDown() { Dispatchers.resetMain() }
 
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
+    @Test fun `network failure retains database rows for offline reading`() = runTest(dispatcher) {
+        rows.value = listOf(createArchive("cached"))
+        coEvery { repo.getVideoList(10, 1) } throws java.io.IOException("offline")
+        vm.loadVideos(); runCurrent()
+        assertEquals("cached", vm.allArchives.value.single().bvid)
+        assertTrue(vm.uiState.value is VideoUiState.Error)
+        assertFalse(vm.isRefreshing.value)
     }
-
-    @Test
-    fun `loadVideos success emits Success state`() = runTest {
-        val archives = listOf(createArchive("BV001"), createArchive("BV002"))
-        coEvery { repo.getVideoList(10, 1) } returns archives
-
-        vm.uiState.test {
-            assertEquals(VideoUiState.Loading, awaitItem())
-
-            vm.loadVideos()
-
-            val state = awaitItem()
-            assertTrue(state is VideoUiState.Success)
-            assertEquals(2, (state as VideoUiState.Success).archives.size)
-        }
+    @Test fun `database emission replaces UI independently of request result`() = runTest(dispatcher) {
+        coEvery { repo.getVideoList(10, 1) } returns listOf(createArchive("unpublished"))
+        vm.loadVideos(); runCurrent()
+        assertTrue(vm.allArchives.value.isEmpty())
+        rows.value = listOf(createArchive("persisted")); runCurrent()
+        assertEquals("persisted", vm.allArchives.value.single().bvid)
     }
-
-    @Test
-    fun `loadVideos failure emits Error state`() = runTest {
-        coEvery { repo.getVideoList(10, 1) } throws RuntimeException("网络错误")
-
-        vm.uiState.test {
-            assertEquals(VideoUiState.Loading, awaitItem())
-
-            vm.loadVideos()
-
-            val state = awaitItem()
-            assertTrue(state is VideoUiState.Error)
-            assertTrue((state as VideoUiState.Error).message.contains("网络错误"))
-        }
+    @Test fun `overlapping refresh gestures share one in flight request`() = runTest(dispatcher) {
+        val pending = CompletableDeferred<List<Archive>>()
+        coEvery { repo.getVideoList(10, 1) } coAnswers { pending.await() }
+        vm.loadVideos(); runCurrent(); vm.refreshVideos(); runCurrent()
+        coVerify(exactly = 1) { repo.getVideoList(10, 1) }
+        pending.complete(emptyList()); runCurrent()
+        assertFalse(vm.isRefreshing.value)
     }
-
-    @Test
-    fun `refreshVideos deduplicates by bvid`() = runTest {
-        val initial = listOf(createArchive("BV001"), createArchive("BV002"))
-        coEvery { repo.getVideoList(10, 1) } returns initial
-
-        vm.loadVideos()
-
-        // Refresh returns one duplicate (BV001) and one new (BV003)
-        val refresh = listOf(createArchive("BV001"), createArchive("BV003"))
-        coEvery { repo.getVideoList(10, 1) } returns refresh
-
-        vm.refreshVideos()
-
-        vm.allArchives.test {
-            val list = awaitItem()
-            // BV003 (new) + BV001 (existing) + BV002 (existing) = 3 unique
-            assertEquals(3, list.size)
-            assertEquals("BV003", list[0].bvid)
-            assertEquals("BV001", list[1].bvid)
-            assertEquals("BV002", list[2].bvid)
-        }
-    }
-
     companion object {
         fun createArchive(bvid: String) = Archive(
             aid = 1L,

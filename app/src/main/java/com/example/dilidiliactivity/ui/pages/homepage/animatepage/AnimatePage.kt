@@ -120,7 +120,7 @@ fun VideoListScreen(
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
-            items(archives) { archive ->
+            items(archives, key = { it.bvid }) { archive ->
                 val uiModel = archive.toUiModel()  // 调用前面写的 mapper
                 VideoIntroCard(
                     video = uiModel,

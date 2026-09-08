@@ -33,36 +33,47 @@ class AnimateVideoViewModel @Inject constructor(
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing
 
-    fun loadVideos(ps: Int = 10, rid: Int = 1) {
-        viewModelScope.launch {
-            _uiState.value = VideoUiState.Loading
-            try {
-                val archives = repo.getVideoList(ps, rid)
-                // 初始加载时，直接设置列表
-                _allArchives.value = archives
-                _uiState.value = VideoUiState.Success(_allArchives.value)
-            } catch (e: Exception) {
-                _uiState.value = VideoUiState.Error("加载失败: ${e.message}")
+    private var observation: kotlinx.coroutines.Job? = null
+    private var refresh: kotlinx.coroutines.Job? = null
+    private var observedRegion: Int? = null
+
+    fun loadVideos(ps: Int = DEFAULT_PAGE_SIZE, rid: Int = DEFAULT_REGION_ID) {
+        if (observedRegion != rid) {
+            observation?.cancel()
+            refresh?.cancel()
+            observedRegion = rid
+            _allArchives.value = emptyList()
+            observation = viewModelScope.launch {
+                repo.observeRegion(rid).collect { rows ->
+                    _allArchives.value = rows
+                    _uiState.value = VideoUiState.Success(rows)
+                }
             }
         }
+        refreshVideos(ps, rid)
     }
-    
-    // 刷新方法：将新数据添加到列表顶部
-    fun refreshVideos(ps: Int = 10, rid: Int = 1) {
-        viewModelScope.launch {
+
+    fun refreshVideos(ps: Int = DEFAULT_PAGE_SIZE, rid: Int = DEFAULT_REGION_ID) {
+        if (refresh?.isActive == true) return
+        refresh = viewModelScope.launch {
             _isRefreshing.value = true
             try {
-                val newArchives = repo.getVideoList(ps, rid)
-                // 将新数据添加到现有列表的顶部，并去重（基于 bvid）
-                val existingBvids = _allArchives.value.map { it.bvid }.toSet()
-                val uniqueNewArchives = newArchives.filter { it.bvid !in existingBvids }
-                _allArchives.value = uniqueNewArchives + _allArchives.value
+                repo.getVideoList(ps, rid)
+                // UI data is exclusively emitted by Room, not by this request result.
                 _uiState.value = VideoUiState.Success(_allArchives.value)
-            } catch (e: Exception) {
-                _uiState.value = VideoUiState.Error("刷新失败: ${e.message}")
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                _uiState.value = VideoUiState.Error("刷新失败: ${error.message}")
             } finally {
                 _isRefreshing.value = false
             }
         }
+    }
+
+    companion object {
+        // Existing region API defaults; this endpoint exposes a snapshot, not a verified cursor contract.
+        const val DEFAULT_PAGE_SIZE = 10
+        const val DEFAULT_REGION_ID = 1
     }
 }
