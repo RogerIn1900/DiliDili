@@ -158,19 +158,13 @@ fun VideoPlayerScreen(
     playerViewModel: VideoPlayerViewModel = hiltViewModel(),
     relatedVideoVM: RelatedVideoViewModel = hiltViewModel()
 ) {
-    val repository = playerViewModel.repository
-    val TAG = "VideoPlayerScreen"
-    //视频数据加载
-    // 本地懒加载数据作为占位
-    var currentArchive by remember {
-        mutableStateOf(
-            ArchiveSingleton.archive
-        )
+    val detail by playerViewModel.uiState.collectAsState()
+    LaunchedEffect(videoId) { playerViewModel.loadDetails(videoId) }
+    val currentArchive = detail.archive?.takeIf { it.bvid == videoId.trim() }
+    if (currentArchive == null) {
+        VideoDetailsStatus(detail, onBack) { playerViewModel.loadDetails(videoId) }
+        return
     }
-    var videoUrl by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(true) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-
     //广告
     var advertisementState by remember { mutableStateOf(true) }
     var advertisement = AdvertisementData(
@@ -188,78 +182,18 @@ fun VideoPlayerScreen(
         tabs.size
     }
     val coroutineScope = rememberCoroutineScope()
-    var playUrl :String by remember { mutableStateOf( "") }
-    //用户和视频信息
-    var userInfo by remember { mutableStateOf(currentArchive.toUserInfo()) }
-    var videoInfo by remember { mutableStateOf(currentArchive.toVideoInfo()) }
-
-    var mid by remember { mutableStateOf(currentArchive.owner.mid) }
-
-    var followers by remember { mutableStateOf(0) }
+    val playUrl = "https://player.bilibili.com/player.html?aid=${currentArchive.aid}&cid=${currentArchive.cid}&page=1"
+    val userInfo = currentArchive.toUserInfo()
+    val videoInfo = currentArchive.toVideoInfo()
+    val mid = currentArchive.owner.mid
+    val followers = detail.followers ?: 0
     val relatedUiState by relatedVideoVM.uiState.collectAsState()
-
-    // 异步加载真实数据
-    LaunchedEffect(videoId) {
-        isLoading = true
-        errorMessage = null
-        try {
-            //通过数据库查询bvid对应的archive数据
-            Timber.d("videoId\n"+videoId.trim())
-            var archive = repository.getArchiveByBvid(videoId.trim())
-            Timber.d("archive\n"+archive.toString())
-
-            if (archive != null) {
-                currentArchive = archive
-                userInfo = archive.toUserInfo() // ⚡ 更新最新的
-                Timber.d("currentArchive：+${currentArchive}")
-
-            } else {
-                errorMessage = "视频不存在"
-                //重新调用网络接口获取视频信息
-//                val newWebData = repository.getPopularPrecious()
-            }
-
-            //通过网络获取视频数据，但是没有相关的接口
-//             archive = repository.getArchiveByBvid(videoId)
-//                ?: repository.getVideoDetail(videoId) // 网络接口
-            Timber.d("通过archive内容获取playUrl")
-            val BASE_PLAY_URL = "https://player.bilibili.com/player.html"
-            val bvid = currentArchive.bvid
-            val aid = currentArchive.aid
-            val cid = currentArchive.cid
-            //获取mid ---》 获取fans数
-            mid = currentArchive.owner.mid
-            followers = repository.getFollowers(mid)
-            val page = 1
-            val mid = currentArchive.owner.mid
-            playUrl = "$BASE_PLAY_URL?aid=$aid&cid=$cid&page=$page"
-            Timber.d("bvid：${bvid}")
-            Timber.d("aid：${aid}")
-            Timber.d("cid：${cid}")
-            Timber.d("mid：${mid}")
-
-            Timber.d("playUrl：${playUrl}")
-            Timber.d("playUrl_watch_place1：${playUrl}")
-//            userInfo = currentArchive.toUserInfo()
-            videoInfo = currentArchive.toVideoInfo()
-
-            Timber.d("videoInfo：${videoInfo}")
-            Timber.d("userInfor：${userInfo}")
-
-            //更新相关推荐视频
-            relatedVideoVM.loadVideos(bvid)
-
-        } catch (e: Exception) {
-            errorMessage = "加载失败: ${e.message}"
-        } finally {
-            isLoading = false
-        }
-    }
-    Timber.d("playUrl_watch_place2：${playUrl}")
+    LaunchedEffect(currentArchive.bvid) { relatedVideoVM.loadVideos(currentArchive.bvid) }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
+        detail.errorMessage?.let { message -> item { Text(message) } }
         // 加载视频详情 + 返回拓展按钮
         item {
             Timber.d("playUrl_watch_place3：${playUrl}")

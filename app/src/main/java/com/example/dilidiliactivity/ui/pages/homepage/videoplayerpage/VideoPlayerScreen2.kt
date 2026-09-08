@@ -91,10 +91,14 @@ fun VideoPlayerScreen2(
     relatedVideoVM: RelatedVideoViewModel = hiltViewModel(),
     playbackViewModel: LocalPlaybackViewModel = hiltViewModel()
 ) {
-    val repository = playerViewModel.repository
-    val TAG = "VideoPlayerScreen2"
-    var currentArchive by remember { mutableStateOf(ArchiveSingleton.archive) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val detail by playerViewModel.uiState.collectAsState()
+    LaunchedEffect(videoId) { playerViewModel.loadDetails(videoId) }
+    val currentArchive = detail.archive?.takeIf { it.bvid == videoId.trim() }
+    if (currentArchive == null) {
+        VideoDetailsStatus(detail, onBack) { playerViewModel.loadDetails(videoId) }
+        return
+    }
+    val errorMessage = detail.errorMessage
     var isFullScreen by rememberSaveable { mutableStateOf(false) }
 
     var advertisementState by remember { mutableStateOf(true) }
@@ -109,10 +113,10 @@ fun VideoPlayerScreen2(
     val pagerState = rememberPagerState(initialPage = 0) { tabs.size }
     val coroutineScope = rememberCoroutineScope()
 
-    var userInfo by remember { mutableStateOf(currentArchive.toUserInfo()) }
-    var videoInfo by remember { mutableStateOf(currentArchive.toVideoInfo()) }
-    var mid by remember { mutableStateOf(currentArchive.owner.mid) }
-    var followers by remember { mutableStateOf(0) }
+    val userInfo = currentArchive.toUserInfo()
+    val videoInfo = currentArchive.toVideoInfo()
+    val mid = currentArchive.owner.mid
+    val followers = detail.followers ?: 0
     var numOfComments by remember { mutableIntStateOf(1024) }
 
     val relatedUiState by relatedVideoVM.uiState.collectAsState()
@@ -156,25 +160,7 @@ fun VideoPlayerScreen2(
         playbackViewModel.select(selectedVideoUri)
     }
 
-    LaunchedEffect(videoId) {
-        errorMessage = null
-        try {
-            val archive = repository.getArchiveByBvid(videoId.trim())
-            if (archive != null) {
-                currentArchive = archive
-                userInfo = archive.toUserInfo()
-                videoInfo = archive.toVideoInfo()
-                mid = archive.owner.mid
-                followers = repository.getFollowers(mid)
-                relatedVideoVM.loadVideos(archive.bvid)
-            } else {
-                errorMessage = "视频不存在"
-            }
-        } catch (e: Exception) {
-            Timber.e( "加载视频失败: ${e.message}")
-            errorMessage = "加载失败: ${e.message}"
-        }
-    }
+    LaunchedEffect(currentArchive.bvid) { relatedVideoVM.loadVideos(currentArchive.bvid) }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize()

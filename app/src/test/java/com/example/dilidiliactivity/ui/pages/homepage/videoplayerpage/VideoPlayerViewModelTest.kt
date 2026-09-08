@@ -86,4 +86,32 @@ class VideoPlayerViewModelTest {
         assertEquals("new", vm.uiState.value.archive!!.bvid)
         assertEquals("https://example.test/new.mp4", vm.uiState.value.videoUrl)
     }
+    @Test fun `cached details render before followers and reject late metadata`() = runTest(dispatcher) {
+        val oldFollowers = CompletableDeferred<Int>()
+        coEvery { repo.getVideoDetail(any()) } answers { createArchive(firstArg()) }
+        coEvery { repo.getFollowers(any()) } coAnswers { withContext(NonCancellable) { oldFollowers.await() } }
+        vm.loadDetails("old")
+        runCurrent()
+        assertEquals("old", vm.uiState.value.archive!!.bvid)
+        assertNull(vm.uiState.value.followers)
+        coEvery { repo.getFollowers(any()) } returns 42
+        vm.loadDetails("new")
+        runCurrent()
+        oldFollowers.complete(100)
+        runCurrent()
+        assertEquals("new", vm.uiState.value.archive!!.bvid)
+        assertEquals(42, vm.uiState.value.followers)
+        io.mockk.coVerify(exactly = 0) { repo.getPlayUrl(any(), any(), any()) }
+    }
+
+    @Test fun `optional follower failure keeps cached detail available`() = runTest(dispatcher) {
+        coEvery { repo.getVideoDetail(any()) } returns createArchive("cached")
+        coEvery { repo.getFollowers(any()) } throws java.io.IOException("offline")
+        vm.loadDetails("cached")
+        runCurrent()
+        assertEquals("cached", vm.uiState.value.archive!!.bvid)
+        assertEquals("关注信息暂不可用", vm.uiState.value.errorMessage)
+        assertNull(vm.uiState.value.followers)
+    }
+
 }

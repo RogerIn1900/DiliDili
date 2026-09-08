@@ -14,14 +14,18 @@ import javax.inject.Inject
 
 @HiltViewModel
 class VideoPlayerViewModel @Inject constructor(
-    val repository: VideoRepository
+    private val repository: VideoRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(VideoPlayerUiState())
     val uiState = _uiState.asStateFlow()
     private var loadJob: Job? = null
     private var requestGeneration = 0L
 
-    fun loadVideo(videoId: String) {
+    fun loadVideo(videoId: String) = load(videoId, resolveMedia = true)
+
+    fun loadDetails(videoId: String) = load(videoId, resolveMedia = false)
+
+    private fun load(videoId: String, resolveMedia: Boolean) {
         val generation = ++requestGeneration
         loadJob?.cancel()
         _uiState.value = VideoPlayerUiState(isLoading = true)
@@ -30,6 +34,16 @@ class VideoPlayerViewModel @Inject constructor(
                 val archive = repository.getVideoDetail(videoId.trim())
                 if (archive == null) {
                     VideoPlayerUiState(errorMessage = "视频不存在")
+                } else if (!resolveMedia) {
+                    if (generation == requestGeneration) _uiState.value = VideoPlayerUiState(archive = archive)
+                    try {
+                        VideoPlayerUiState(archive = archive, followers = repository.getFollowers(archive.owner.mid))
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (_: Exception) {
+                        // The optional follower endpoint must not hide a cached playable detail page.
+                        VideoPlayerUiState(archive = archive, errorMessage = "关注信息暂不可用")
+                    }
                 } else {
                     val url = repository.getPlayUrl(archive.cid.toString(), archive.bvid)
                     if (url.isNullOrBlank()) {
@@ -52,6 +66,7 @@ class VideoPlayerViewModel @Inject constructor(
 data class VideoPlayerUiState(
     val archive: Archive? = null,
     val videoUrl: String? = null,
+    val followers: Int? = null,
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
