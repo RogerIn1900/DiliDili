@@ -121,6 +121,10 @@ import com.example.dilidiliactivity.data.mapper.toUserInfo
 import com.example.dilidiliactivity.data.mapper.toVideoInfo
 import com.example.dilidiliactivity.data.local.archive.Archive
 import com.example.dilidiliactivity.domain.repository.VideoRepository
+import com.example.dilidiliactivity.domain.playback.PlayerGestureMode
+import com.example.dilidiliactivity.domain.playback.chooseGesture
+import com.example.dilidiliactivity.domain.playback.seekTargetMs
+import com.example.dilidiliactivity.domain.playback.TemporarySpeedBoost
 import com.example.dilidiliactivity.ui.navigation.Routes
 import com.example.dilidiliactivity.ui.pages.homepage.animatepage.VideoUiState
 import com.example.dilidiliactivity.ui.pages.homepage.randomvideo.WebView
@@ -546,14 +550,6 @@ fun FollowButton() {
     }
 }
 
-private enum class PlayerGestureMode {
-    Brightness,
-    Volume,
-    Seek
-}
-
-private const val SEEK_SENSITIVITY_MS = 60_000f
-private const val THREE_X_SPEED = 3f
 private const val MIN_BRIGHTNESS = 0.05f
 
 @Composable
@@ -1177,8 +1173,17 @@ fun VideoPlayerWithCustomTopBar(
     }
     var currentBrightness by remember { mutableStateOf(getInitialBrightness(activity)) }
     var controlsVisible by remember { mutableStateOf(true) }
-    var isSpeedBoosted by remember { mutableStateOf(false) }
-    var normalPlaybackParameters by remember { mutableStateOf(exoPlayer.playbackParameters) }
+    val speedBoost = remember(exoPlayer) {
+        TemporarySpeedBoost(
+            read = { exoPlayer.playbackParameters.speed },
+            write = { exoPlayer.playbackParameters = PlaybackParameters(it, exoPlayer.playbackParameters.pitch) }
+        )
+    }
+    DisposableEffect(speedBoost) { onDispose { speedBoost.end() } }
+    var pendingSeekPosition by remember(exoPlayer) { mutableStateOf<Long?>(null) }
+    var dragStartX by remember { mutableStateOf(0f) }
+    var initialVolume by remember { mutableStateOf(0) }
+    var initialBrightness by remember { mutableStateOf(0f) }
     var containerSize by remember { mutableStateOf(IntSize.Zero) }
     var dragMode by remember { mutableStateOf<PlayerGestureMode?>(null) }
     var accumulatedDx by remember { mutableStateOf(0f) }
@@ -1258,7 +1263,7 @@ fun VideoPlayerWithCustomTopBar(
                 currentPosition = exoPlayer.currentPosition
                 bufferedPosition = exoPlayer.bufferedPosition
                 duration = exoPlayer.duration.takeIf { it > 0 } ?: duration
-                if (!isSeeking) {
+                if (!isSeeking && dragMode != PlayerGestureMode.Seek) {
                     sliderPosition = currentPosition
                 }
                 delay(500)
@@ -1317,31 +1322,27 @@ fun VideoPlayerWithCustomTopBar(
                             }
                         },
                         onLongPress = {
-                            if (!isSpeedBoosted) {
-                                normalPlaybackParameters = exoPlayer.playbackParameters
-                                exoPlayer.playbackParameters =
-                                    PlaybackParameters(THREE_X_SPEED, normalPlaybackParameters.pitch)
-                                isSpeedBoosted = true
-                            }
+                            speedBoost.begin()
                             showSpeedOverlay = true
                         },
                         onPress = {
                             try {
                                 tryAwaitRelease()
                             } finally {
-                                if (isSpeedBoosted) {
-                                    exoPlayer.playbackParameters = normalPlaybackParameters
-                                    isSpeedBoosted = false
-                                }
+                                speedBoost.end()
                                 showSpeedOverlay = false
                             }
                         }
                     )
                 }
-                .pointerInput(containerSize) {
+                .pointerInput(exoPlayer, containerSize) {
                     if (containerSize == IntSize.Zero) return@pointerInput
                     detectDragGestures(
-                        onDragStart = {
+                        onDragStart = { position ->
+                            dragStartX = position.x
+                            initialVolume = currentVolume
+                            initialBrightness = currentBrightness
+                            pendingSeekPosition = null
                             dragMode = null
                             accumulatedDx = 0f
                             accumulatedDy = 0f
@@ -1352,46 +1353,26 @@ fun VideoPlayerWithCustomTopBar(
                             accumulatedDy += dragAmount.y
 
                             if (dragMode == null) {
-                                val absDx = abs(accumulatedDx)
-                                val absDy = abs(accumulatedDy)
-                                if (absDx > gestureThresholdPx || absDy > gestureThresholdPx) {
-                                    dragMode = if (absDx > absDy) {
-                                        PlayerGestureMode.Seek
-                                    } else {
-                                        if (change.position.x < containerSize.width / 2f) {
-                                            PlayerGestureMode.Brightness
-                                        } else {
-                                            PlayerGestureMode.Volume
-                                        }
-                                    }
-                                }
+                                dragMode = chooseGesture(accumulatedDx, accumulatedDy, dragStartX, containerSize.width.toFloat(), gestureThresholdPx)
                             }
 
                             when (dragMode) {
                                 PlayerGestureMode.Seek -> {
-                                    val durationTotal = exoPlayer.duration.takeIf { it > 0 } ?: Long.MAX_VALUE
-                                    val deltaMs = (accumulatedDx / containerSize.width) * SEEK_SENSITIVITY_MS
-                                    val target = (initialSeekPosition + deltaMs).coerceIn(
-                                        0f,
-                                        if (durationTotal == Long.MAX_VALUE) Float.MAX_VALUE else durationTotal.toFloat()
-                                    ).toLong()
-                                    exoPlayer.seekTo(target)
-                                    if (useCustomControls && duration > 0) {
-                                        sliderPosition = target.coerceAtMost(duration)
-                                    }
+                                    pendingSeekPosition = seekTargetMs(initialSeekPosition, accumulatedDx, containerSize.width, exoPlayer.duration)
+                                    pendingSeekPosition?.let { sliderPosition = it }
                                 }
 
                                 PlayerGestureMode.Brightness -> {
                                     if (containerSize.height > 0) {
-                                        val delta = -dragAmount.y / containerSize.height
-                                        applyBrightness(currentBrightness + delta)
+                                        val delta = -accumulatedDy / containerSize.height
+                                        applyBrightness(initialBrightness + delta)
                                     }
                                 }
 
                                 PlayerGestureMode.Volume -> {
                                     if (containerSize.height > 0) {
-                                        val step = (-dragAmount.y / containerSize.height) * maxVolume
-                                        applyVolume(currentVolume + step.roundToInt())
+                                        val step = (-accumulatedDy / containerSize.height) * maxVolume
+                                        applyVolume(initialVolume + step.roundToInt())
                                     }
                                 }
 
@@ -1401,11 +1382,14 @@ fun VideoPlayerWithCustomTopBar(
                             change.consume()
                         },
                         onDragEnd = {
+                            pendingSeekPosition?.let { exoPlayer.seekTo(it) }
+                            pendingSeekPosition = null
                             dragMode = null
                             accumulatedDx = 0f
                             accumulatedDy = 0f
                         },
                         onDragCancel = {
+                            pendingSeekPosition = null
                             dragMode = null
                             accumulatedDx = 0f
                             accumulatedDy = 0f
