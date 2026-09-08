@@ -1,37 +1,31 @@
 # DiliDili
 
-**学习模仿 B 站视频播放模块和整体 App 架构**
+Kotlin / Jetpack Compose 视频浏览、本地播放与离线列表实践。
 
----
+本分支将优化落实为可测试的播放会话、Room 事务刷新和固定素材性能测量。实现与验证入口见 [工程说明](docs/resume-target.md)。
 
-## 项目简介
-DiliDili 是一个 **仿 B 站视频播放板块的练习项目**，主要目标是学习和实践 **现代 Android 架构与优化手段**。  
+## 已实现
 
----
+- Media3 本地播放：统一播放会话管理创建、前后台释放、媒体选择、进度及暂停状态保存；页面内嵌和全屏复用实例。
+- 可测试手势：方向锁定、进度边界、取消不提交 Seek、临时倍速恢复。
+- Room 列表快照：数据库作为读取来源，原子替换分区排序，去重、失败保留旧数据和刷新合并。
+- Retrofit 请求契约、乱序请求隔离、Room 事务/迁移与 Compose 生命周期回归测试。
+- 独立 Macrobenchmark 模块及视频首帧采样脚本。
 
-## 技术栈与特性
+## 能力边界
 
-### 构建 & 依赖管理
-- 使用 **Kotlin DSL + Version Catalog** 管理依赖与插件，实现 **单一真相源**，减少冲突  
-- Gradle 并行与缓存、构建性能优化  
-- **KSP** 支持  
+网络播放页面仍使用 WebView；离线能力指列表数据，不包含视频下载。当前列表接口未确认分页游标契约，因此没有接入 Paging 3 / RemoteMediator。没有声称 Baseline Profile 收益、ANR 降幅或启动提升比例。Room 使用 KAPT，构建依赖仍有历史重复声明。
 
-### 架构 & 数据流
-- 全 **Jetpack Compose** 架构  
-- **Hilt** 依赖注入，支持 ViewModel 注入与 `SavedStateHandle` 协作  
-- **Room** 数据库：索引、事务、Paging3 集成  
-- **Retrofit + OkHttp**：拦截器链、超时/重试/缓存策略  
-- **Coroutines + Flow/StateFlow**：端到端响应式数据流、单向数据流、状态提升  
-- **kotlinx-serialization**：多态、默认值处理  
+## 构建与验证
 
-### 优化
-- **Baseline Profiles**  
-- **R8**：资源/代码压缩、`keep` 规则与可读性平衡  
-- **Compose BOM** 管理版本  
-- **Compose 可重组优化**：稳定键、不可变状态  
-- **Network Security Config** 配置  
+需要 JDK 17、Android SDK 36，并设置 `ANDROID_HOME`。
 
----
+```sh
+./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+ANDROID_SERIAL=<test-device> ./gradlew :app:connectedDebugAndroidTest
+```
+
+启动 App 后，首页的“本地播放体验”可进入不依赖网络接口的固定素材演示。
 
 ## 基本功能展示
 

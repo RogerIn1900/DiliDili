@@ -1,0 +1,15 @@
+{
+  "device": "sdk_gphone64_arm64",
+  "sdk": "36",
+  "source": "5d5d587-dirty",
+  "apk_sha256": "510bcb2533c4af825f307ef95bfc18210425e1e7ee278d4482ab84ddf774b865",
+  "metric": "setMediaItem to onRenderedFirstFrame in milliseconds",
+  "fixture": "playback_fixture.mp4; H264 320x180 24fps 6s, no audio",
+  "samples_ms": [
+    175,
+    144,
+    136
+  ],
+  "median_ms": 144,
+  "limitations": "Local fixture only; emulator results do not establish physical-device performance or a before/after improvement"
+}
