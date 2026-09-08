@@ -156,6 +156,10 @@ fun CollapsingHeaderScreen(paddingValues: PaddingValues, sharedVm: SharedVideoVi
         // 第一部分：随滚动消失的 Header
         item {
             HomeTopBar()
+            val context = androidx.compose.ui.platform.LocalContext.current
+            androidx.compose.material3.TextButton(onClick = {
+                context.startActivity(android.content.Intent(context, com.example.dilidiliactivity.ui.playback.PlaybackDemoActivity::class.java))
+            }) { Text("本地播放体验") }
         }
 
         // 第二部分：固定 TabRow

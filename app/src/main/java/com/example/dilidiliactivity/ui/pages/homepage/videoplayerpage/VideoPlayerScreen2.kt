@@ -52,6 +52,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.dilidiliactivity.ui.playback.LocalPlaybackViewModel
 import com.example.dilidiliactivity.ui.playback.Media3PlaybackEngine
+import com.example.dilidiliactivity.ui.playback.PlaybackLifecycle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import timber.log.Timber
@@ -124,22 +125,7 @@ fun VideoPlayerScreen2(
     val playbackError by playbackViewModel.error.collectAsState()
     val engine by session.engine.collectAsState()
     val exoPlayer = (engine as? Media3PlaybackEngine)?.player
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner, session) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_START -> session.start()
-                Lifecycle.Event.ON_STOP -> session.stop()
-                else -> Unit
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) session.start()
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            session.stop()
-        }
-    }
+    PlaybackLifecycle(session)
     var selectedVideoLabel by remember { mutableStateOf("内置演示视频") }
     var pickerError by remember { mutableStateOf<String?>(null) }
 

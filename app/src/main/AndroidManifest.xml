@@ -16,6 +16,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.DiliDiliActivity" >
+        <activity android:name=".ui.playback.PlaybackDemoActivity" android:exported="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
