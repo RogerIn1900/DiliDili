@@ -36,22 +36,22 @@ class VideoRepositoryTest {
     }
 
     @Test
-    fun `getVideoDetail returns from memory cache on second call`() = runTest {
+    fun `getVideoDetail always reads current database snapshot`() = runTest {
         val archive = createArchive("BV001")
         val entity = archive.toEntity()
         coEvery { dao.getArchive("BV001") } returns entity
 
-        // 第一次调用 — 内存缓存未命中，从 DAO 获取
+        // Read through the authoritative database on every request.
         val first = repo.getVideoDetail("BV001")
         assertNotNull(first)
 
-        // 第二次调用 — 应该从内存缓存返回，不再查询 DAO
+        // A separate map must not mask refreshed database values.
         val second = repo.getVideoDetail("BV001")
         assertNotNull(second)
         assertEquals(first, second)
 
-        // DAO 只被调用一次（第一次）
-        coVerify(exactly = 1) { dao.getArchive("BV001") }
+        // Both reads cross the database boundary.
+        coVerify(exactly = 2) { dao.getArchive("BV001") }
     }
 
     @Test
@@ -76,11 +76,12 @@ class VideoRepositoryTest {
         )
         coEvery { api.getDynamicRegion(10, 1) } returns response
 
+        coEvery { dao.getRegion(1) } returns archives.map { it.toEntity() }
         val result = repo.getVideoList(10, 1)
 
         assertEquals(2, result.size)
         assertEquals("BV001", result[0].bvid)
-        coVerify(exactly = 2) { dao.insertArchive(any()) }
+        coVerify(exactly = 1) { dao.replaceRegion(1, any()) }
     }
 
     @Test

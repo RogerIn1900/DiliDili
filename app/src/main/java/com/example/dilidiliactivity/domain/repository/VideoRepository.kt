@@ -12,26 +12,23 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import timber.log.Timber
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.io.IOException
 
 class VideoRepository(
     private val dao: ArchiveDao,
     private val api: BilibiliApi
 ) {
     val BASE_PLAY_URL = "https://player.bilibili.com/player.html"
-    private val memoryCache = mutableMapOf<String, Archive>()
+    private val refreshMutex = Mutex()
 
-    suspend fun getVideoDetail(videoId: String): Archive? {
-        memoryCache[videoId]?.let { return it }
-        Timber.d("内存缓存未命中: %s", videoId)
+    suspend fun getVideoDetail(videoId: String): Archive? = dao.getArchive(videoId)?.toDomain()
 
-        dao.getArchive(videoId)?.let {
-            memoryCache[videoId] = it.toDomain()
-            return memoryCache[videoId]
-        }
-        Timber.d("本地数据库未命中: %s", videoId)
-
-        return null
-    }
+    fun observeRegion(regionId: Int): Flow<List<Archive>> =
+        dao.observeRegion(regionId).map { rows -> rows.map { it.toDomain() } }
 
     suspend fun getPopularPrecious(): List<Archive> {
         var _preciousState = MutableStateFlow<PopularPreciousResponse?>(null)
@@ -48,15 +45,13 @@ class VideoRepository(
         return list.value
     }
 
-    suspend fun getVideoList(ps: Int, rid: Int): List<Archive> {
+    suspend fun getVideoList(ps: Int, rid: Int): List<Archive> = refreshMutex.withLock {
+        require(ps > 0 && rid > 0) { "Page size and region must be positive" }
         val response = api.getDynamicRegion(ps, rid)
-        val list = response.data.archives
-
-        Timber.d("getVideoList: 获取到 %d 条视频", list.size)
-        list.forEach {
-            dao.insertArchive(it.toEntity())
-        }
-        return list
+        if (response.code != 0) throw IOException("视频列表请求失败 (${response.code})")
+        // Only a complete successful response replaces the visible snapshot.
+        dao.replaceRegion(rid, response.data.archives.map { it.toEntity() })
+        dao.getRegion(rid).map { it.toDomain() }
     }
 
     suspend fun getArchiveByBvid(bvid: String): Archive? {
