@@ -47,6 +47,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.example.dilidiliactivity.ui.playback.LocalPlaybackViewModel
+import com.example.dilidiliactivity.ui.playback.Media3PlaybackEngine
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import timber.log.Timber
@@ -81,7 +86,8 @@ fun VideoPlayerScreen2(
     onBack: () -> Unit,
     onExpand: () -> Unit,
     playerViewModel: VideoPlayerViewModel = hiltViewModel(),
-    relatedVideoVM: RelatedVideoViewModel = hiltViewModel()
+    relatedVideoVM: RelatedVideoViewModel = hiltViewModel(),
+    playbackViewModel: LocalPlaybackViewModel = hiltViewModel()
 ) {
     val repository = playerViewModel.repository
     val TAG = "VideoPlayerScreen2"
@@ -113,7 +119,27 @@ fun VideoPlayerScreen2(
     val rawVideoUri = remember {
         RawResourceDataSource.buildRawResourceUri(R.raw.video)
     }
-    var selectedVideoUri by remember { mutableStateOf<Uri?>(rawVideoUri) }
+    val session = playbackViewModel.session
+    var selectedVideoUri by rememberSaveable { mutableStateOf(session.selectedUri ?: rawVideoUri.toString()) }
+    val playbackError by playbackViewModel.error.collectAsState()
+    val engine by session.engine.collectAsState()
+    val exoPlayer = (engine as? Media3PlaybackEngine)?.player
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, session) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> session.start()
+                Lifecycle.Event.ON_STOP -> session.stop()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) session.start()
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            session.stop()
+        }
+    }
     var selectedVideoLabel by remember { mutableStateOf("内置演示视频") }
     var pickerError by remember { mutableStateOf<String?>(null) }
 
@@ -131,36 +157,16 @@ fun VideoPlayerScreen2(
                         "无法获取持久读取权限"
                     )
                 }
-                selectedVideoUri = uri
+                selectedVideoUri = uri.toString()
                 selectedVideoLabel = "本地文件"
                 pickerError = null
-            } else if (selectedVideoUri == null) {
+            } else if (exoPlayer == null) {
                 pickerError = "请选择一个可播放的视频文件"
             }
         }
 
-    val exoPlayer = remember(context) {
-        ExoPlayer.Builder(context).build().apply {
-            playWhenReady = true
-        }
-    }
-
-    DisposableEffect(exoPlayer) {
-        onDispose {
-            exoPlayer.release()
-        }
-    }
-
     LaunchedEffect(selectedVideoUri) {
-        val uri = selectedVideoUri
-        if (uri != null) {
-            Timber.d( "加载本地播放链接：$uri")
-            exoPlayer.setMediaItem(MediaItem.fromUri(uri))
-            exoPlayer.prepare()
-        } else {
-            exoPlayer.stop()
-            exoPlayer.clearMediaItems()
-        }
+        playbackViewModel.select(selectedVideoUri)
     }
 
     LaunchedEffect(videoId) {
@@ -198,7 +204,7 @@ fun VideoPlayerScreen2(
                         .height(220.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (selectedVideoUri == null) {
+                    if (exoPlayer == null) {
                         Text(
                             text = "请选择要播放的视频文件",
                             color = Color.White
@@ -216,7 +222,7 @@ fun VideoPlayerScreen2(
                 VideoSourceSelector(
                     currentLabel = selectedVideoLabel,
                     onPlayRaw = {
-                        selectedVideoUri = rawVideoUri
+                        selectedVideoUri = rawVideoUri.toString()
                         selectedVideoLabel = "内置演示视频"
                         pickerError = null
                     },
@@ -225,6 +231,9 @@ fun VideoPlayerScreen2(
                         openDocumentLauncher.launch(arrayOf("video/*"))
                     }
                 )
+                if (playbackError != null) {
+                    Text(playbackError.orEmpty(), color = Color.White)
+                }
                 if (pickerError != null) {
                     Text(
                         text = pickerError ?: "",
@@ -361,7 +370,7 @@ fun VideoPlayerScreen2(
         }
     }
 
-    if (isFullScreen && selectedVideoUri != null) {
+    if (isFullScreen && exoPlayer != null) {
         FullscreenVideoDialog(
             exoPlayer = exoPlayer,
             onDismiss = { isFullScreen = false }
