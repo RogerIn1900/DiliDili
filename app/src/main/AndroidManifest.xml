@@ -17,11 +17,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DiliDiliActivity" >
         <activity
-            android:name=".Navigation.NavigationGraph"
-            android:exported="false"
-            android:label="@string/title_activity_navigation_graph"
-            android:theme="@style/Theme.DiliDiliActivity" />
-        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
