@@ -1,103 +1,89 @@
 package com.example.dilidiliactivity.ui.pages.homepage.videoplayerpage
 
-import app.cash.turbine.test
 import com.example.dilidiliactivity.domain.repository.VideoRepository
 import com.example.dilidiliactivity.ui.pages.homepage.animatepage.AnimateVideoViewModelTest.Companion.createArchive
 import io.mockk.coEvery
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withContext
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class VideoPlayerViewModelTest {
-
+    private val dispatcher = StandardTestDispatcher()
     private lateinit var repo: VideoRepository
     private lateinit var vm: VideoPlayerViewModel
-    private val testDispatcher = UnconfinedTestDispatcher()
 
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(testDispatcher)
+    @Before fun setUp() {
+        Dispatchers.setMain(dispatcher)
         repo = mockk()
         vm = VideoPlayerViewModel(repo)
     }
+    @After fun tearDown() = Dispatchers.resetMain()
 
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
-
-    @Test
-    fun `loadVideo success updates uiState with archive`() = runTest {
+    @Test fun `successful selection publishes resolved media without network in test`() = runTest(dispatcher) {
         val archive = createArchive("BV001")
         coEvery { repo.getVideoDetail("BV001") } returns archive
-
-        vm.uiState.test {
-            val initial = awaitItem()
-            assertEquals(false, initial.isLoading)
-            assertNull(initial.archive)
-
-            vm.loadVideo("BV001")
-
-            // isLoading = true
-            val loading = awaitItem()
-            assertTrue(loading.isLoading)
-
-            // Result - getBiliVideoUrl will fail in test (no network), so it will be "无法获取视频源"
-            // or success if url is returned. Since getBiliVideoUrl uses OkHttp directly, in unit test
-            // it will throw and result in error. Let's just verify we get past loading.
-            val result = awaitItem()
-            assertEquals(false, result.isLoading)
-            // archive was found, so archive should be set or error about video source
-            // In test env without network, getBiliVideoUrl throws, so errorMessage = "无法获取视频源"
-            assertEquals("无法获取视频源", result.errorMessage)
-        }
+        coEvery { repo.getPlayUrl("1", "BV001", any()) } returns "https://example.test/video.mp4"
+        vm.loadVideo(" BV001 ")
+        assertTrue(vm.uiState.value.isLoading)
+        runCurrent()
+        assertEquals(archive, vm.uiState.value.archive)
+        assertEquals("https://example.test/video.mp4", vm.uiState.value.videoUrl)
+        assertFalse(vm.uiState.value.isLoading)
     }
 
-    @Test
-    fun `loadVideo with non-existent video shows error`() = runTest {
-        coEvery { repo.getVideoDetail("BV_INVALID") } returns null
-
-        vm.uiState.test {
-            awaitItem() // initial
-
-            vm.loadVideo("BV_INVALID")
-
-            val loading = awaitItem()
-            assertTrue(loading.isLoading)
-
-            val result = awaitItem()
-            assertEquals(false, result.isLoading)
-            assertEquals("视频不存在", result.errorMessage)
-            assertNull(result.archive)
-        }
+    @Test fun `missing video clears loading and previous media`() = runTest(dispatcher) {
+        coEvery { repo.getVideoDetail(any()) } returns null
+        vm.loadVideo("missing")
+        runCurrent()
+        assertEquals("视频不存在", vm.uiState.value.errorMessage)
+        assertFalse(vm.uiState.value.isLoading)
+        assertNull(vm.uiState.value.videoUrl)
     }
 
-    @Test
-    fun `loadVideo exception shows error message`() = runTest {
-        coEvery { repo.getVideoDetail("BV001") } throws RuntimeException("数据库异常")
+    @Test fun `database failure produces actionable error`() = runTest(dispatcher) {
+        coEvery { repo.getVideoDetail(any()) } throws IllegalStateException("数据库异常")
+        vm.loadVideo("BV001")
+        runCurrent()
+        assertTrue(vm.uiState.value.errorMessage!!.contains("数据库异常"))
+        assertFalse(vm.uiState.value.isLoading)
+    }
 
-        vm.uiState.test {
-            awaitItem() // initial
+    @Test fun `missing media source does not publish a playable archive`() = runTest(dispatcher) {
+        coEvery { repo.getVideoDetail(any()) } returns createArchive("BV001")
+        coEvery { repo.getPlayUrl(any(), any(), any()) } returns null
+        vm.loadVideo("BV001")
+        runCurrent()
+        assertEquals("无法获取视频源", vm.uiState.value.errorMessage)
+        assertNull(vm.uiState.value.archive)
+    }
 
-            vm.loadVideo("BV001")
-
-            val loading = awaitItem()
-            assertTrue(loading.isLoading)
-
-            val result = awaitItem()
-            assertEquals(false, result.isLoading)
-            assertTrue(result.errorMessage!!.contains("数据库异常"))
+    @Test fun `late uncancellable result cannot overwrite newer selection`() = runTest(dispatcher) {
+        val oldResult = CompletableDeferred<String?>()
+        coEvery { repo.getVideoDetail(any()) } answers { createArchive(firstArg()) }
+        coEvery { repo.getPlayUrl("1", "old", any()) } coAnswers {
+            withContext(NonCancellable) { oldResult.await() }
         }
+        coEvery { repo.getPlayUrl("1", "new", any()) } returns "https://example.test/new.mp4"
+        vm.loadVideo("old")
+        runCurrent()
+        vm.loadVideo("new")
+        runCurrent()
+        oldResult.complete("https://example.test/old.mp4")
+        runCurrent()
+        assertEquals("new", vm.uiState.value.archive!!.bvid)
+        assertEquals("https://example.test/new.mp4", vm.uiState.value.videoUrl)
     }
 }

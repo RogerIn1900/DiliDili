@@ -1603,29 +1603,6 @@ fun VideoPlayerWithCustomTopBar(
     }
 }
 
-suspend fun getBiliVideoUrl(archive: Archive): String? = withContext(Dispatchers.IO) {
-    val client = OkHttpClient()
-    val cid = archive.cid
-    val bvid = archive.bvid
-    val apiUrl = "https://api.bilibili.com/x/player/playurl?cid=$cid&bvid=$bvid&qn=80&otype=json"
-
-    try {
-        val request = Request.Builder().url(apiUrl).build()
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) return@withContext null
-            val body = response.body?.string() ?: return@withContext null
-            val json = JSONObject(body)
-            val durl = json.getJSONObject("data").optJSONArray("durl")
-            if (durl != null && durl.length() > 0) {
-                durl.getJSONObject(0).getString("url")
-            } else null
-        }
-    } catch (e: Exception) {
-        Timber.e(e, "获取视频播放地址失败")
-        null
-    }
-}
-
 private fun formatDuration(positionMs: Long): String {
     if (positionMs <= 0L) return "00:00"
     val totalSeconds = positionMs / 1000

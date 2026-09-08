@@ -8,6 +8,7 @@ import com.example.dilidiliactivity.data.local.archive.toDomain
 import com.example.dilidiliactivity.data.local.archive.toEntity
 import com.example.dilidiliactivity.data.remote.api.BilibiliApi
 import com.example.dilidiliactivity.data.local.archive.Archive
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import timber.log.Timber
@@ -83,7 +84,10 @@ class VideoRepository(
             val resp = api.getPlayUrl(cid = cid, bvid = bvid, qn = qn)
             if (!resp.isSuccessful) return null
             val body = resp.body() ?: return null
-            body.data.durl.firstOrNull()?.url
+            if (body.code != 0) return null
+            body.data.durl.firstOrNull()?.url?.takeIf { it.isNotBlank() }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (_: Exception) {
             null
         }
