@@ -8,7 +8,7 @@ import com.example.dilidiliactivity.data.local.VideoPlayerData.FansData
 import com.example.dilidiliactivity.data.local.VideoPlayerData.FansResponse
 import com.example.dilidiliactivity.data.local.archive.ArchiveDao
 import com.example.dilidiliactivity.data.local.archive.ArchiveEntity
-import com.example.dilidiliactivity.data.local.archive.toDomain
+import com.example.dilidiliactivity.data.local.archive.toEntity
 import com.example.dilidiliactivity.data.remote.api.BilibiliApi
 import com.example.dilidiliactivity.ui.pages.homepage.animatepage.AnimateVideoViewModelTest.Companion.createArchive
 import io.mockk.coEvery
@@ -38,9 +38,8 @@ class VideoRepositoryTest {
     @Test
     fun `getVideoDetail returns from memory cache on second call`() = runTest {
         val archive = createArchive("BV001")
-        val entity = mockk<ArchiveEntity>()
+        val entity = archive.toEntity()
         coEvery { dao.getArchive("BV001") } returns entity
-        every { entity.toDomain() } returns archive
 
         // 第一次调用 — 内存缓存未命中，从 DAO 获取
         val first = repo.getVideoDetail("BV001")
